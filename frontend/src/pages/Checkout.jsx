@@ -36,6 +36,7 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
     setLoading(true);
 
     try {
+      // 1. Create order terlebih dahulu
       const orderData = {
         customerName: formData.customerName,
         email: formData.email,
@@ -54,14 +55,77 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
         notes: formData.notes,
       };
 
-      const response = await axios.post(`${API_URL}/orders`, orderData);
+      const orderResponse = await axios.post(`${API_URL}/orders`, orderData);
+      const order = orderResponse.data;
 
-      alert(`Pesanan berhasil! ID Order: ${response.data._id}`);
-      clearCart();
-      navigate("/");
+      // 2. Jika metode pembayaran online, proses dengan Midtrans
+      if (
+        formData.paymentMethod === "Transfer Bank" ||
+        formData.paymentMethod === "E-Wallet"
+      ) {
+        const paymentData = {
+          orderId: order._id,
+          amount: totalAmount,
+          customerDetails: {
+            first_name: formData.customerName,
+            email: formData.email,
+            phone: formData.phone,
+          },
+          items: cart.map((item) => ({
+            id: item._id,
+            price: item.price,
+            quantity: item.quantity,
+            name: item.name,
+          })),
+        };
+
+        const paymentResponse = await axios.post(
+          `${API_URL}/payment/create-token`,
+          paymentData
+        );
+
+        // 3. Tampilkan Midtrans Snap popup
+        window.snap.pay(paymentResponse.data.token, {
+          onSuccess: function (result) {
+            console.log("Payment success:", result);
+            alert("✅ Pembayaran berhasil! Terima kasih.");
+            clearCart();
+            navigate("/");
+          },
+          onPending: function (result) {
+            console.log("Payment pending:", result);
+            alert("⏳ Menunggu pembayaran. Order ID: " + order._id);
+            clearCart();
+            navigate("/");
+          },
+          onError: function (result) {
+            console.log("Payment error:", result);
+            alert("❌ Pembayaran gagal. Silakan coba lagi.");
+          },
+          onClose: function () {
+            console.log("Customer closed the popup without finishing payment");
+            alert(
+              "Pembayaran dibatalkan. Order ID: " +
+                order._id +
+                " masih tersimpan."
+            );
+          },
+        });
+      } else {
+        // COD - langsung sukses
+        alert(`✅ Pesanan berhasil dibuat! 
+Order ID: ${order._id}
+Metode: Cash on Delivery (COD)
+Total: Rp ${totalAmount.toLocaleString("id-ID")}
+
+Silakan siapkan uang tunai saat barang tiba.`);
+        clearCart();
+        navigate("/");
+      }
     } catch (error) {
       alert(
-        "Terjadi kesalahan: " + (error.response?.data?.message || error.message)
+        "❌ Terjadi kesalahan: " +
+          (error.response?.data?.message || error.message)
       );
     } finally {
       setLoading(false);
@@ -85,63 +149,55 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-10 text-center text-gray-900">
-        🛒 Checkout
-      </h1>
+      <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
-      <div className="grid md:grid-cols-3 gap-10">
+      <div className="grid md:grid-cols-3 gap-8">
         {/* Cart Items */}
         <div className="md:col-span-2">
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">
-              📦 Keranjang Belanja
-            </h2>
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Keranjang Belanja</h2>
 
             {cart.map((item) => (
               <div
                 key={item._id}
-                className="flex items-center gap-6 border-b border-gray-200 py-6 last:border-b-0"
+                className="flex items-center gap-4 border-b py-4"
               >
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-24 h-24 object-cover rounded-xl shadow-md"
+                  className="w-20 h-20 object-cover rounded"
                 />
 
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-gray-900">
-                    {item.name}
-                  </h3>
-                  <p className="text-gray-600 font-medium">
+                  <h3 className="font-semibold">{item.name}</h3>
+                  <p className="text-gray-600">
                     Rp {item.price.toLocaleString("id-ID")}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-2">
+                <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                    className="bg-white hover:bg-gray-100 w-8 h-8 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md flex items-center justify-center font-bold"
+                    className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
                   >
                     -
                   </button>
-                  <span className="px-4 font-bold text-lg min-w-[3rem] text-center">
-                    {item.quantity}
-                  </span>
+                  <span className="px-4">{item.quantity}</span>
                   <button
                     onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                    className="bg-white hover:bg-gray-100 w-8 h-8 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md flex items-center justify-center font-bold"
+                    className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
                   >
                     +
                   </button>
                 </div>
 
-                <div className="font-bold text-xl text-blue-600">
+                <div className="font-semibold">
                   Rp {(item.price * item.quantity).toLocaleString("id-ID")}
                 </div>
 
                 <button
                   onClick={() => removeFromCart(item._id)}
-                  className="text-red-500 hover:text-red-700 transition-colors duration-200 p-2 hover:bg-red-50 rounded-lg"
+                  className="text-red-600 hover:text-red-800"
                 >
                   🗑️
                 </button>
@@ -300,38 +356,27 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
 
         {/* Order Summary */}
         <div>
-          <div className="bg-white rounded-2xl shadow-xl p-8 sticky top-4 border border-gray-100">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">
-              📊 Ringkasan Pesanan
-            </h2>
+          <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+            <h2 className="text-xl font-semibold mb-4">Ringkasan Pesanan</h2>
 
-            <div className="space-y-4 mb-6">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600 font-medium">Subtotal</span>
-                <span className="font-semibold">
-                  Rp {totalAmount.toLocaleString("id-ID")}
-                </span>
+            <div className="space-y-2 mb-4">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>Rp {totalAmount.toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-gray-600 font-medium">Ongkir</span>
-                <span className="text-green-600 font-bold">🆓 Gratis</span>
+              <div className="flex justify-between">
+                <span>Ongkir</span>
+                <span className="text-green-600">Gratis</span>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-6">
-              <div className="flex justify-between items-center text-2xl font-bold">
-                <span className="text-gray-900">Total</span>
+            <div className="border-t pt-4">
+              <div className="flex justify-between text-xl font-bold">
+                <span>Total</span>
                 <span className="text-blue-600">
                   Rp {totalAmount.toLocaleString("id-ID")}
                 </span>
               </div>
-            </div>
-
-            <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-              <p className="text-sm text-blue-800 font-medium">
-                💡 Pesanan akan diproses dalam 1-2 hari kerja setelah pembayaran
-                dikonfirmasi
-              </p>
             </div>
           </div>
         </div>

@@ -11,6 +11,8 @@ function Admin() {
   const [orders, setOrders] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -84,6 +86,7 @@ function Admin() {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setImagePreview(product.image);
     setFormData({
       name: product.name,
       description: product.description,
@@ -119,7 +122,61 @@ function Admin() {
       unit: "unit",
     });
     setEditingProduct(null);
+    setImagePreview(null);
     setShowForm(false);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validasi tipe file
+    if (!file.type.startsWith("image/")) {
+      alert("File harus berupa gambar!");
+      return;
+    }
+
+    // Validasi ukuran (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Ukuran gambar maksimal 5MB!");
+      return;
+    }
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload ke backend
+    setUploading(true);
+    const formDataUpload = new FormData();
+    formDataUpload.append("image", file);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/upload/image`,
+        formDataUpload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setFormData((prev) => ({ ...prev, image: response.data.url }));
+      alert("✅ Gambar berhasil diupload!");
+    } catch (error) {
+      alert(
+        "❌ Gagal upload gambar: " +
+          (error.response?.data?.message || error.message)
+      );
+      setImagePreview(null);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const updateOrderStatus = async (orderId, orderStatus, paymentStatus) => {
@@ -260,18 +317,52 @@ function Admin() {
                   </select>
                 </div>
 
+                {/* IMAGE UPLOAD */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    URL Gambar
+                    Gambar Produk
                   </label>
+
+                  {/* preview */}
+                  <div className="mb-2">
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="preview"
+                        className="w-48 h-32 object-cover rounded border"
+                      />
+                    ) : formData.image ? (
+                      <img
+                        src={formData.image}
+                        alt="existing"
+                        className="w-48 h-32 object-cover rounded border"
+                      />
+                    ) : (
+                      <div className="w-48 h-32 bg-gray-100 rounded border flex items-center justify-center text-sm text-gray-500">
+                        Preview tidak tersedia
+                      </div>
+                    )}
+                  </div>
+
+                  {/* file input */}
                   <input
-                    type="text"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="https://example.com/image.jpg"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="text-sm"
                   />
+
+                  {/* optional info + uploading indicator */}
+                  {uploading ? (
+                    <div className="text-sm text-gray-600 mt-2">
+                      Mengunggah gambar...
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 mt-2">
+                      Kamu bisa pilih file gambar (max 5MB). Setelah upload, URL
+                      otomatis tersimpan.
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-4">
