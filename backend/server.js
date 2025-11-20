@@ -19,6 +19,8 @@ mongoose
 app.use("/api/products", require("./routes/products"));
 app.use("/api/orders", require("./routes/orders"));
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/upload", require("./routes/upload"));
+app.use("/api/payment", require("./routes/payment"));
 
 // Test route
 app.get("/api/test", (req, res) => {
