@@ -124,18 +124,6 @@ function Login() {
               : "Sudah punya akun? 🔐 Masuk"}
           </button>
         </div>
-
-        {isLogin && (
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-600 text-center mb-3 font-medium">
-              🔑 Akun Demo Admin:
-            </p>
-            <div className="text-sm text-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl border">
-              <p className="font-medium">📧 Email: admin@tokogas.com</p>
-              <p className="font-medium">🔒 Password: admin123</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

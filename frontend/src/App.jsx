@@ -6,6 +6,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import RegisterVendor from "./pages/RegisterVendor";
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -69,6 +70,7 @@ function App() {
               />
             }
           />
+          <Route path="/register-vendor" element={<RegisterVendor />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>

@@ -33,6 +33,13 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        // VENDOR INFO PER ITEM
+        vendor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        vendorStoreName: String,
+        vendorAmount: Number, // Amount yang masuk ke vendor ini
       },
     ],
     totalAmount: {
@@ -55,10 +62,31 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     notes: String,
+    // SPLIT PAYMENT INFO
+    vendorPayments: [
+      {
+        vendor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        vendorStoreName: String,
+        amount: Number,
+        paymentStatus: {
+          type: String,
+          enum: ["pending", "paid"],
+          default: "pending",
+        },
+        paidAt: Date,
+      },
+    ],
   },
   {
     timestamps: true,
   }
 );
+
+// Index untuk query
+orderSchema.index({ "items.vendor": 1 });
+orderSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Order", orderSchema);

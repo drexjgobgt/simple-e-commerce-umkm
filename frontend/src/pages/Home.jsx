@@ -142,6 +142,13 @@ function Home({ addToCart }) {
               key={product._id}
               className="group bg-white rounded-2xl shadow-md hover:shadow-2xl overflow-hidden transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
             >
+              {/* VENDOR BADGE - TAMBAHKAN INI */}
+              <div className="flex items-center gap-2 text-sm text-gray-600 mt-2">
+                <span className="text-blue-600">🏪</span>
+                <span>
+                  Dijual oleh: <strong>{product.vendorStoreName}</strong>
+                </span>
+              </div>
               <div className="relative overflow-hidden">
                 <img
                   src={product.image}

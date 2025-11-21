@@ -1,22 +1,55 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const User = require("../models/User");
 const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 
-// Get semua produk (public)
+// Get semua produk (public) - dengan info vendor
 router.get("/", async (req, res) => {
   try {
-    const products = await Product.find();
+    const { vendor, category } = req.query;
+
+    const filter = { isActive: true };
+    if (vendor) filter.vendor = vendor;
+    if (category) filter.category = category;
+
+    const products = await Product.find(filter)
+      .populate("vendor", "storeName storeDescription storePhone")
+      .sort({ createdAt: -1 });
+
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
+// Get produk by vendor (untuk admin melihat produk sendiri)
+router.get(
+  "/my-products",
+  authMiddleware,
+  adminMiddleware,
+  async (req, res) => {
+    try {
+      const products = await Product.find({
+        vendor: req.user.userId,
+        isActive: true,
+      }).sort({ createdAt: -1 });
+
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 // Get produk by ID (public)
 router.get("/:id", async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate(
+      "vendor",
+      "storeName storeDescription storePhone storeAddress"
+    );
+
     if (!product) {
       return res.status(404).json({ message: "Produk tidak ditemukan" });
     }
@@ -26,10 +59,24 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Create produk (admin only)
+// Create produk (admin only - hanya untuk vendor sendiri)
 router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const product = new Product(req.body);
+    // Get vendor info
+    const vendor = await User.findById(req.user.userId);
+    if (!vendor || vendor.role !== "admin") {
+      return res.status(403).json({ message: "Akses ditolak" });
+    }
+
+    // Create product dengan vendor info
+    const product = new Product({
+      ...req.body,
+      vendor: vendor._id,
+      vendorName: vendor.name,
+      vendorStoreName: vendor.storeName,
+      vendorPhone: vendor.storePhone,
+    });
+
     const savedProduct = await product.save();
     res.status(201).json(savedProduct);
   } catch (error) {
@@ -37,28 +84,67 @@ router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
-// Update produk (admin only)
+// Update produk (admin only - hanya produk sendiri)
 router.put("/:id", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const product = await Product.findById(req.params.id);
+
     if (!product) {
       return res.status(404).json({ message: "Produk tidak ditemukan" });
     }
-    res.json(product);
+
+    // VENDOR ISOLATION: Cek apakah produk milik vendor ini
+    if (product.vendor.toString() !== req.user.userId) {
+      return res.status(403).json({
+        message:
+          "Anda tidak memiliki akses untuk mengedit produk ini. Produk ini milik vendor lain.",
+      });
+    }
+
+    // Update product (tidak update vendor info)
+    const allowedUpdates = [
+      "name",
+      "description",
+      "price",
+      "category",
+      "stock",
+      "unit",
+      "image",
+    ];
+    allowedUpdates.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        product[field] = req.body[field];
+      }
+    });
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Delete produk (admin only)
+// Delete produk (admin only - hanya produk sendiri)
 router.delete("/:id", authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
+
     if (!product) {
       return res.status(404).json({ message: "Produk tidak ditemukan" });
     }
+
+    // VENDOR ISOLATION: Cek apakah produk milik vendor ini
+    if (product.vendor.toString() !== req.user.userId) {
+      return res.status(403).json({
+        message:
+          "Anda tidak memiliki akses untuk menghapus produk ini. Produk ini milik vendor lain.",
+      });
+    }
+
+    // Soft delete - tandai sebagai tidak aktif
+    product.isActive = false;
+    await product.save();
+
     res.json({ message: "Produk berhasil dihapus" });
   } catch (error) {
     res.status(500).json({ message: error.message });

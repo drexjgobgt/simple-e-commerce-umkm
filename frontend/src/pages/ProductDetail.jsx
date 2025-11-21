@@ -115,6 +115,23 @@ function ProductDetail({ addToCart }) {
             </p>
           </div>
 
+          <div className="bg-gray-50 rounded-lg p-4 mt-6">
+            <h3 className="font-bold mb-2">Informasi Penjual</h3>
+            <div className="space-y-2 text-sm">
+              <p>
+                <strong>Toko:</strong> {product.vendorStoreName}
+              </p>
+              {product.vendorPhone && (
+                <p>
+                  <strong>Telepon:</strong> {product.vendorPhone}
+                </p>
+              )}
+              <p className="text-gray-600">
+                {product.vendor?.storeDescription}
+              </p>
+            </div>
+          </div>
+
           {product.stock > 0 && (
             <>
               <div className="bg-blue-50 rounded-xl p-6">

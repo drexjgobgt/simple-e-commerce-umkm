@@ -31,10 +31,36 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "unit",
     },
+    // VENDOR INFORMATION
+    vendor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    vendorName: {
+      type: String,
+      required: true,
+    },
+    vendorStoreName: {
+      type: String,
+      required: true,
+    },
+    vendorPhone: {
+      type: String,
+    },
+    // Status
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+// Index untuk query per vendor
+productSchema.index({ vendor: 1 });
+productSchema.index({ isActive: 1 });
 
 module.exports = mongoose.model("Product", productSchema);

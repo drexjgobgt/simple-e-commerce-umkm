@@ -21,6 +21,48 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "customer"],
       default: "customer",
     },
+    // Vendor/Toko Information (untuk admin)
+    storeName: {
+      type: String,
+      required: function () {
+        return this.role === "admin";
+      },
+    },
+    storeDescription: {
+      type: String,
+    },
+    storePhone: {
+      type: String,
+    },
+    storeAddress: {
+      type: String,
+    },
+    // Payment Information (untuk admin)
+    bankName: {
+      type: String,
+    },
+    accountNumber: {
+      type: String,
+    },
+    accountName: {
+      type: String,
+    },
+    // Midtrans Merchant (opsional - untuk direct payment)
+    midtransClientKey: {
+      type: String,
+    },
+    midtransServerKey: {
+      type: String,
+    },
+    // Status
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

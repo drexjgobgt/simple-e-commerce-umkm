@@ -57,6 +57,15 @@ function Navbar({ cartCount }) {
               )}
             </Link>
 
+            {!user && (
+              <Link
+                to="/register-vendor"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              >
+                Daftar Jadi Vendor
+              </Link>
+            )}
+
             {user && user.role === "admin" && (
               <Link
                 to="/admin"
