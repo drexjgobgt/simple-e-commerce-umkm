@@ -33,7 +33,10 @@ function PaymentSetupTab() {
         midtransServerKey: response.data.midtransServerKey || "",
       });
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error(
+        "Error fetching profile:",
+        error.response?.status || "Network error"
+      );
       alert("Gagal memuat profil");
     } finally {
       setLoading(false);
@@ -57,10 +60,10 @@ function PaymentSetupTab() {
       alert("✅ Kunci pembayaran berhasil disimpan!");
       fetchProfile();
     } catch (error) {
-      console.error("Error saving payment keys:", error);
+      console.error("Error saving payment keys");
       alert(
         "❌ Gagal menyimpan kunci pembayaran: " +
-          (error.response?.data?.message || error.message)
+          (error.response?.data?.message || "Terjadi kesalahan")
       );
     } finally {
       setSaving(false);

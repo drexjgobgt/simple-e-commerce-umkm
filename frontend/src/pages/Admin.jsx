@@ -360,7 +360,9 @@ function Admin() {
                         />
                         <div>
                           <p className="text-sm text-green-600">
-                            ✅ Gambar siap diupload
+                            {formData.image
+                              ? "✅ Gambar berhasil diupload"
+                              : "⏳ Gambar siap diupload"}
                           </p>
                           <button
                             type="button"
@@ -375,7 +377,6 @@ function Admin() {
                         </div>
                       </div>
                     )}
-
                     {/* URL Input (Alternative) */}
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">
