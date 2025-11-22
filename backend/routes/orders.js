@@ -29,12 +29,10 @@ router.post("/", async (req, res) => {
 
     console.log("📥 Received order request:", {
       customerName,
-      email,
       userId: userId || "guest",
       itemsCount: items.length,
       paymentMethod,
     });
-
     // Hitung total amount dan collect vendor info
     let totalAmount = 0;
     const orderItems = [];
@@ -122,9 +120,7 @@ router.post("/", async (req, res) => {
       "✅ Order saved:",
       savedOrder._id,
       "- Customer:",
-      userId || "guest",
-      "- Email:",
-      savedOrder.email
+      userId || "guest"
     );
 
     res.status(201).json(savedOrder);
@@ -140,8 +136,7 @@ router.get("/my-orders", authMiddleware, async (req, res) => {
     const userId = req.user.userId;
     const userEmail = req.user.email;
 
-    console.log("🔍 Fetching orders for user ID:", userId, "Email:", userEmail);
-
+    console.log("🔍 Fetching orders for user ID:", userId);
     // Find orders by customer ID or by email for backward compatibility
     const orders = await Order.find({
       $or: [
@@ -168,8 +163,7 @@ router.get("/customer/:email", async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     console.warn("⚠️  DEPRECATED: Using insecure email-based order lookup");
-    console.log("🔍 Fetching orders for email:", normalizedEmail);
-
+    console.log("🔍 Fetching orders for authenticated user");
     const orders = await Order.find({ email: normalizedEmail })
       .populate("items.product")
       .sort({ createdAt: -1 });

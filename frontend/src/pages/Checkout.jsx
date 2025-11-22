@@ -87,19 +87,19 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
         // 3. Tampilkan Midtrans Snap popup
         window.snap.pay(paymentResponse.data.token, {
           onSuccess: function (result) {
-            console.log("Payment success:", result);
+            console.log("Payment succeeded - Order ID:", order._id);
             alert("✅ Pembayaran berhasil! Terima kasih.");
             clearCart();
             navigate("/");
           },
           onPending: function (result) {
-            console.log("Payment pending:", result);
+            console.log("Payment pending - Order ID:", order._id);
             alert("⏳ Menunggu pembayaran. Order ID: " + order._id);
             clearCart();
             navigate("/");
           },
           onError: function (result) {
-            console.log("Payment error:", result);
+            console.log("Payment error - Order ID:", order._id);
             alert("❌ Pembayaran gagal. Silakan coba lagi.");
           },
           onClose: function () {
