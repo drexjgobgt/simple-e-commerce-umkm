@@ -28,6 +28,7 @@ function Admin() {
     midtransServerKey: "",
   });
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [showOrderHistory, setShowOrderHistory] = useState({});
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
