@@ -6,6 +6,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import OrderHistory from "./pages/OrderHistory";
 import RegisterVendor from "./pages/RegisterVendor";
 
 function App() {
@@ -70,6 +71,7 @@ function App() {
               />
             }
           />
+          <Route path="/orders/history" element={<OrderHistory />} />
           <Route path="/register-vendor" element={<RegisterVendor />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />

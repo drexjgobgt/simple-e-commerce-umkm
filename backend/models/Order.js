@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     customerName: {
       type: String,
       required: true,
@@ -86,6 +90,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Index untuk query
+orderSchema.index({ customer: 1 });
 orderSchema.index({ "items.vendor": 1 });
 orderSchema.index({ createdAt: -1 });
 

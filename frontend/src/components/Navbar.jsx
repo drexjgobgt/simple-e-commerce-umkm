@@ -57,12 +57,21 @@ function Navbar({ cartCount }) {
               )}
             </Link>
 
+            {user && user.role !== "admin" && (
+              <Link
+                to="/orders/history"
+                className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 font-medium flex items-center gap-2"
+              >
+                <span>📦 Riwayat Pesanan</span>
+              </Link>
+            )}
+
             {!user && (
               <Link
                 to="/register-vendor"
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+                className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 font-medium flex items-center gap-2"
               >
-                Daftar Jadi Vendor
+                🏪 Daftar Vendor
               </Link>
             )}
 
@@ -160,6 +169,27 @@ function Navbar({ cartCount }) {
             >
               🛒 Keranjang {cartCount > 0 && `(${cartCount})`}
             </Link>
+
+            {!user && (
+              <Link
+                to="/register-vendor"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-lg hover:bg-white/10 transition-all"
+              >
+                🏪 Daftar Vendor
+              </Link>
+            )}
+
+            {user && user.role !== "admin" && (
+              <Link
+                to="/orders/history"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-lg hover:bg-white/10 transition-all"
+              >
+                📦 Riwayat Pesanan
+              </Link>
+            )}
+
             {user && user.role === "admin" && (
               <Link
                 to="/admin"

@@ -58,102 +58,59 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
       const orderResponse = await axios.post(`${API_URL}/orders`, orderData);
       const order = orderResponse.data;
 
-      // 2. Jika metode pembayaran online, proses dengan Midtrans per vendor
+      // 2. Jika metode pembayaran online, proses dengan Midtrans
       if (
         formData.paymentMethod === "Transfer Bank" ||
         formData.paymentMethod === "E-Wallet"
       ) {
-        // Group items by vendor
-        const vendorGroups = {};
-        cart.forEach((item) => {
-          if (!vendorGroups[item.vendor]) {
-            vendorGroups[item.vendor] = [];
-          }
-          vendorGroups[item.vendor].push(item);
-        });
+        const paymentData = {
+          orderId: order._id,
+          amount: totalAmount,
+          customerDetails: {
+            first_name: formData.customerName,
+            email: formData.email,
+            phone: formData.phone,
+          },
+          items: cart.map((item) => ({
+            id: item._id,
+            price: item.price,
+            quantity: item.quantity,
+            name: item.name,
+          })),
+        };
 
-        // Process payment for each vendor
-        let allPaymentsSuccessful = true;
-        for (const vendorId in vendorGroups) {
-          const vendorItems = vendorGroups[vendorId];
-          const vendorTotal = vendorItems.reduce(
-            (sum, item) => sum + item.price * item.quantity,
-            0
-          );
+        const paymentResponse = await axios.post(
+          `${API_URL}/payment/create-token`,
+          paymentData
+        );
 
-          const paymentData = {
-            vendorId,
-            amount: vendorTotal,
-            customerDetails: {
-              first_name: formData.customerName,
-              email: formData.email,
-              phone: formData.phone,
-            },
-            items: vendorItems.map((item) => ({
-              id: item._id,
-              price: item.price,
-              quantity: item.quantity,
-              name: item.name,
-            })),
-          };
-
-          try {
-            const paymentResponse = await axios.post(
-              `${API_URL}/payment/create-token-per-vendor`,
-              paymentData
+        // 3. Tampilkan Midtrans Snap popup
+        window.snap.pay(paymentResponse.data.token, {
+          onSuccess: function (result) {
+            console.log("Payment success:", result);
+            alert("✅ Pembayaran berhasil! Terima kasih.");
+            clearCart();
+            navigate("/");
+          },
+          onPending: function (result) {
+            console.log("Payment pending:", result);
+            alert("⏳ Menunggu pembayaran. Order ID: " + order._id);
+            clearCart();
+            navigate("/");
+          },
+          onError: function (result) {
+            console.log("Payment error:", result);
+            alert("❌ Pembayaran gagal. Silakan coba lagi.");
+          },
+          onClose: function () {
+            console.log("Customer closed the popup without finishing payment");
+            alert(
+              "Pembayaran dibatalkan. Order ID: " +
+                order._id +
+                " masih tersimpan."
             );
-
-            // Cek jika mock mode
-            if (paymentResponse.data.isMock) {
-              alert(
-                `🧪 MOCK PAYMENT MODE\n\nPembayaran untuk vendor ${vendorId} akan otomatis sukses dalam 3 detik.`
-              );
-              continue;
-            }
-
-            // Real Midtrans Snap - wait for each payment to complete
-            await new Promise((resolve, reject) => {
-              window.snap.pay(paymentResponse.data.token, {
-                onSuccess: function (result) {
-                  console.log("Payment success for vendor:", vendorId, result);
-                  alert(`✅ Pembayaran berhasil untuk vendor ${vendorId}!`);
-                  resolve();
-                },
-                onPending: function (result) {
-                  console.log("Payment pending for vendor:", vendorId, result);
-                  alert(`⏳ Menunggu pembayaran untuk vendor ${vendorId}.`);
-                  resolve();
-                },
-                onError: function (result) {
-                  console.log("Payment error for vendor:", vendorId, result);
-                  alert(`❌ Pembayaran gagal untuk vendor ${vendorId}.`);
-                  allPaymentsSuccessful = false;
-                  reject(new Error("Payment failed"));
-                },
-                onClose: function () {
-                  console.log(
-                    "Customer closed the popup for vendor:",
-                    vendorId
-                  );
-                  alert(`Pembayaran dibatalkan untuk vendor ${vendorId}.`);
-                  allPaymentsSuccessful = false;
-                  reject(new Error("Payment cancelled"));
-                },
-              });
-            });
-          } catch (error) {
-            console.error("Payment error for vendor:", vendorId, error);
-            allPaymentsSuccessful = false;
-          }
-        }
-
-        if (allPaymentsSuccessful) {
-          alert("✅ Semua pembayaran berhasil! Terima kasih.");
-          clearCart();
-          navigate("/");
-        } else {
-          alert("❌ Beberapa pembayaran gagal. Silakan coba lagi.");
-        }
+          },
+        });
       } else {
         // COD - langsung sukses
         alert(`✅ Pesanan berhasil dibuat! 

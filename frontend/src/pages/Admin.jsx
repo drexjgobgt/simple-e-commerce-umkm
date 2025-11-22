@@ -6,7 +6,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function Admin() {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
   const [activeTab, setActiveTab] = useState("products");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -23,12 +22,6 @@ function Admin() {
     image: "",
     unit: "unit",
   });
-  const [paymentSettings, setPaymentSettings] = useState({
-    midtransClientKey: "",
-    midtransServerKey: "",
-  });
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [showOrderHistory, setShowOrderHistory] = useState({});
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -37,11 +30,8 @@ function Admin() {
       return;
     }
 
-    setCurrentUser(user); // simpan user login
-
     fetchProducts();
     fetchOrders();
-    fetchPaymentSettings();
   }, []);
 
   const getAuthHeader = () => {
@@ -51,11 +41,7 @@ function Admin() {
 
   const fetchProducts = async () => {
     try {
-      // Fetch hanya produk milik vendor ini
-      const response = await axios.get(
-        `${API_URL}/products/my-products`,
-        getAuthHeader()
-      );
+      const response = await axios.get(`${API_URL}/products`);
       setProducts(response.data);
     } catch (error) {
       console.error("Error:", error);
@@ -207,43 +193,6 @@ function Admin() {
     }
   };
 
-  const fetchPaymentSettings = async () => {
-    try {
-      const response = await axios.get(
-        `${API_URL}/auth/vendor-profile`,
-        getAuthHeader()
-      );
-      setPaymentSettings({
-        midtransClientKey: response.data.midtransClientKey || "",
-        midtransServerKey: response.data.midtransServerKey || "",
-      });
-    } catch (error) {
-      console.error("Error fetching payment settings:", error);
-    }
-  };
-
-  const handlePaymentSettingsChange = (e) => {
-    setPaymentSettings({ ...paymentSettings, [e.target.name]: e.target.value });
-  };
-
-  const savePaymentSettings = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(
-        `${API_URL}/auth/vendor-profile/payment`,
-        paymentSettings,
-        getAuthHeader()
-      );
-      alert("Payment settings updated successfully!");
-      setShowPaymentForm(false);
-    } catch (error) {
-      alert(
-        "Error updating payment settings: " +
-          (error.response?.data?.message || error.message)
-      );
-    }
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
@@ -269,16 +218,6 @@ function Admin() {
           }`}
         >
           Pesanan
-        </button>
-        <button
-          onClick={() => setActiveTab("settings")}
-          className={`px-6 py-2 rounded-lg font-semibold transition ${
-            activeTab === "settings"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
-        >
-          Pengaturan
         </button>
       </div>
 
@@ -378,52 +317,18 @@ function Admin() {
                   </select>
                 </div>
 
-                {/* IMAGE UPLOAD */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    Gambar Produk
+                    URL Gambar
                   </label>
-
-                  {/* preview */}
-                  <div className="mb-2">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="preview"
-                        className="w-48 h-32 object-cover rounded border"
-                      />
-                    ) : formData.image ? (
-                      <img
-                        src={formData.image}
-                        alt="existing"
-                        className="w-48 h-32 object-cover rounded border"
-                      />
-                    ) : (
-                      <div className="w-48 h-32 bg-gray-100 rounded border flex items-center justify-center text-sm text-gray-500">
-                        Preview tidak tersedia
-                      </div>
-                    )}
-                  </div>
-
-                  {/* file input */}
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="text-sm"
+                    type="text"
+                    name="image"
+                    value={formData.image}
+                    onChange={handleInputChange}
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="https://example.com/image.jpg"
                   />
-
-                  {/* optional info + uploading indicator */}
-                  {uploading ? (
-                    <div className="text-sm text-gray-600 mt-2">
-                      Mengunggah gambar...
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 mt-2">
-                      Kamu bisa pilih file gambar (max 5MB). Setelah upload, URL
-                      otomatis tersimpan.
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex gap-4">
@@ -469,32 +374,13 @@ function Admin() {
                     <td className="px-4 py-3">
                       <button
                         onClick={() => handleEdit(product)}
-                        disabled={product.vendor !== currentUser.id}
-                        className={`
-    ${
-      product.vendor === currentUser.id
-        ? "text-blue-600 hover:text-blue-800"
-        : "text-gray-400 cursor-not-allowed"
-    }
-  `}
+                        className="text-blue-600 hover:text-blue-800 mr-4"
                       >
-                        {product.vendor === currentUser.id
-                          ? "Edit"
-                          : "Vendor Lain"}
+                        Edit
                       </button>
                       <button
-                        onClick={() =>
-                          product.vendor === currentUser?.id &&
-                          handleDelete(product._id)
-                        }
-                        disabled={product.vendor !== currentUser?.id}
-                        className={`
-    ${
-      product.vendor === currentUser?.id
-        ? "text-red-600 hover:text-red-800"
-        : "text-gray-300 cursor-not-allowed"
-    }
-  `}
+                        onClick={() => handleDelete(product._id)}
+                        className="text-red-600 hover:text-red-800"
                       >
                         Hapus
                       </button>
@@ -599,92 +485,6 @@ function Admin() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Settings Tab */}
-      {activeTab === "settings" && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Pengaturan Pembayaran</h2>
-
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="mb-4">
-              <button
-                onClick={() => setShowPaymentForm(!showPaymentForm)}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-              >
-                {showPaymentForm ? "Batal" : "Atur Midtrans Keys"}
-              </button>
-            </div>
-
-            {showPaymentForm && (
-              <form onSubmit={savePaymentSettings} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Midtrans Client Key
-                  </label>
-                  <input
-                    type="text"
-                    name="midtransClientKey"
-                    value={paymentSettings.midtransClientKey}
-                    onChange={handlePaymentSettingsChange}
-                    required
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="SB-Mid-client-xxxxx"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Midtrans Server Key
-                  </label>
-                  <input
-                    type="text"
-                    name="midtransServerKey"
-                    value={paymentSettings.midtransServerKey}
-                    onChange={handlePaymentSettingsChange}
-                    required
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="SB-Mid-server-xxxxx"
-                  />
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-                  >
-                    Simpan
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPaymentForm(false)}
-                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400"
-                  >
-                    Batal
-                  </button>
-                </div>
-              </form>
-            )}
-
-            <div className="mt-6">
-              <h3 className="font-semibold mb-2">Status Pengaturan:</h3>
-              <div className="text-sm text-gray-600">
-                <p>
-                  Client Key:{" "}
-                  {paymentSettings.midtransClientKey
-                    ? "✅ Dikonfigurasi"
-                    : "❌ Belum dikonfigurasi"}
-                </p>
-                <p>
-                  Server Key:{" "}
-                  {paymentSettings.midtransServerKey
-                    ? "✅ Dikonfigurasi"
-                    : "❌ Belum dikonfigurasi"}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       )}
     </div>
