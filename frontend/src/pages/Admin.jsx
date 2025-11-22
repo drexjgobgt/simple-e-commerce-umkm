@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import PaymentSetupTab from "../components/PaymentSetupTab";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -219,6 +220,16 @@ function Admin() {
         >
           Pesanan
         </button>
+        <button
+          onClick={() => setActiveTab("payment")}
+          className={`px-6 py-2 rounded-lg font-semibold transition ${
+            activeTab === "payment"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
+        >
+          💳 Setup Pembayaran
+        </button>
       </div>
 
       {/* Products Tab */}
@@ -317,18 +328,69 @@ function Admin() {
                   </select>
                 </div>
 
+                {/* Image Upload Section */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    URL Gambar
+                    Gambar Produk
                   </label>
-                  <input
-                    type="text"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2"
-                    placeholder="https://example.com/image.jpg"
-                  />
+                  <div className="space-y-3">
+                    {/* File Upload */}
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="w-full border rounded px-3 py-2"
+                        disabled={uploading}
+                      />
+                      {uploading && (
+                        <p className="text-sm text-blue-600 mt-1">
+                          ⬆️ Mengupload gambar...
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Image Preview */}
+                    {imagePreview && (
+                      <div className="flex items-center space-x-3">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-20 h-20 object-cover rounded border"
+                        />
+                        <div>
+                          <p className="text-sm text-green-600">
+                            ✅ Gambar siap diupload
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagePreview(null);
+                              setFormData((prev) => ({ ...prev, image: "" }));
+                            }}
+                            className="text-xs text-red-600 hover:text-red-800"
+                          >
+                            Hapus gambar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* URL Input (Alternative) */}
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">
+                        Atau masukkan URL gambar langsung:
+                      </label>
+                      <input
+                        type="text"
+                        name="image"
+                        value={formData.image}
+                        onChange={handleInputChange}
+                        className="w-full border rounded px-3 py-2 text-sm"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex gap-4">
@@ -487,6 +549,9 @@ function Admin() {
           ))}
         </div>
       )}
+
+      {/* Payment Setup Tab */}
+      {activeTab === "payment" && <PaymentSetupTab />}
     </div>
   );
 }
