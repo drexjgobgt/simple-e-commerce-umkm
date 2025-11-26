@@ -22,6 +22,11 @@ app.use("/api/auth", require("./routes/auth"));
 app.use("/api/upload", require("./routes/upload"));
 app.use("/api/payment", require("./routes/payment"));
 
+// Root route
+app.get("/", (req, res) => {
+  res.json({ message: "Backend API is running!" });
+});
+
 // Test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "API is working!" });

@@ -53,7 +53,7 @@ function PaymentSetupTab() {
 
     try {
       await axios.put(
-        `${API_URL}/auth/vendor-profile/payment`,
+        `${API_URL}/api/auth/vendor-profile/payment`,
         formData,
         getAuthHeader()
       );
