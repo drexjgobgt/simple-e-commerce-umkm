@@ -21,7 +21,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const endpoint = isLogin ? "/auth/login" : "/auth/register";
+      const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
       const response = await axios.post(`${API_URL}${endpoint}`, formData);
 
       if (isLogin) {

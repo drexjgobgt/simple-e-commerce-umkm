@@ -80,7 +80,7 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
         };
 
         const paymentResponse = await axios.post(
-          `${API_URL}/payment/create-token`,
+          `${API_URL}/api/payment/create-token`,
           paymentData
         );
 
