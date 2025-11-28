@@ -51,10 +51,7 @@ function Admin() {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(
-        `${API_URL}/api/orders`,
-        getAuthHeader()
-      );
+      const response = await axios.get(`${API_URL}/orders`, getAuthHeader());
       setOrders(response.data);
     } catch (error) {
       console.error("Error:", error);
@@ -77,7 +74,7 @@ function Admin() {
         );
         alert("Produk berhasil diupdate!");
       } else {
-        await axios.post(`${API_URL}/api/products`, formData, getAuthHeader());
+        await axios.post(`${API_URL}/products`, formData, getAuthHeader());
         alert("Produk berhasil ditambahkan!");
       }
 
@@ -107,7 +104,7 @@ function Admin() {
     if (!confirm("Yakin ingin menghapus produk ini?")) return;
 
     try {
-      await axios.delete(`${API_URL}/api/products/${id}`, getAuthHeader());
+      await axios.delete(`${API_URL}/products/${id}`, getAuthHeader());
       alert("Produk berhasil dihapus!");
       fetchProducts();
     } catch (error) {
@@ -160,7 +157,7 @@ function Admin() {
 
     try {
       const response = await axios.post(
-        `${API_URL}/api/upload/image`,
+        `${API_URL}/upload/image`,
         formDataUpload,
         {
           headers: {

@@ -24,7 +24,7 @@ function PaymentSetupTab() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        `${API_URL}/api/auth/vendor-profile`,
+        `${API_URL}/auth/vendor-profile`,
         getAuthHeader()
       );
       setProfile(response.data);
@@ -53,7 +53,7 @@ function PaymentSetupTab() {
 
     try {
       await axios.put(
-        `${API_URL}/api/auth/vendor-profile/payment`,
+        `${API_URL}/auth/vendor-profile/payment`,
         formData,
         getAuthHeader()
       );
