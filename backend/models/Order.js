@@ -87,6 +87,21 @@ const orderSchema = new mongoose.Schema(
       default: false,
     },
     notes: String,
+    statusHistory: [
+      {
+        orderStatus: String,
+        paymentStatus: String,
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        note: String,
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     // SPLIT PAYMENT INFO
     vendorPayments: [
       {

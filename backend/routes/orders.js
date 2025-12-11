@@ -315,6 +315,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Allowed transitions
+const ORDER_TRANSITIONS = {
+  pending: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered", "cancelled"],
+  delivered: [],
+  cancelled: [],
+};
+
+const PAYMENT_TRANSITIONS = {
+  pending: ["paid", "failed"],
+  paid: ["failed"],
+  failed: [],
+};
+
 // Update order status (admin only)
 router.patch(
   "/:id/status",
@@ -330,23 +345,38 @@ router.patch(
       const wasDelivered = order.orderStatus === "delivered";
       const wasPaid = order.paymentStatus === "paid";
 
-      // Validate simple state machine
-      const allowedStatuses = [
-        "pending",
-        "processing",
-        "shipped",
-        "delivered",
-        "cancelled",
-      ];
+      // Validate enums
+      const allowedStatuses = Object.keys(ORDER_TRANSITIONS);
+      const allowedPayment = Object.keys(PAYMENT_TRANSITIONS);
       if (orderStatus && !allowedStatuses.includes(orderStatus)) {
         return res.status(400).json({ message: "Status pesanan tidak valid" });
       }
-
-      const allowedPayment = ["pending", "paid", "failed"];
       if (paymentStatus && !allowedPayment.includes(paymentStatus)) {
         return res
           .status(400)
           .json({ message: "Status pembayaran tidak valid" });
+      }
+
+      // Validate transitions
+      if (orderStatus) {
+        const next = ORDER_TRANSITIONS[order.orderStatus] || [];
+        if (!next.includes(orderStatus) && orderStatus !== order.orderStatus) {
+          return res.status(400).json({
+            message: `Transisi status tidak diizinkan (${order.orderStatus} -> ${orderStatus})`,
+          });
+        }
+      }
+
+      if (paymentStatus) {
+        const nextPay = PAYMENT_TRANSITIONS[order.paymentStatus] || [];
+        if (
+          !nextPay.includes(paymentStatus) &&
+          paymentStatus !== order.paymentStatus
+        ) {
+          return res.status(400).json({
+            message: `Transisi pembayaran tidak diizinkan (${order.paymentStatus} -> ${paymentStatus})`,
+          });
+        }
       }
 
       // Apply changes
@@ -367,6 +397,13 @@ router.patch(
         order.stockAdjusted = false;
       }
 
+      await order.save();
+      order.statusHistory.push({
+        orderStatus: order.orderStatus,
+        paymentStatus: order.paymentStatus,
+        changedBy: req.user.userId,
+        note: req.body.note,
+      });
       await order.save();
       // Send receipt when newly paid or delivered
       if (

@@ -11,6 +11,7 @@ function Admin() {
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
   const [profile, setProfile] = useState(null);
+  const POLL_MS = 20000;
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -49,6 +50,24 @@ function Admin() {
     fetchOrders();
   }, []);
 
+  // Polling ringan untuk orders saat tab aktif
+  useEffect(() => {
+    let intervalId;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const poll = () => {
+      if (document.visibilityState === "visible") {
+        fetchOrders();
+      }
+    };
+
+    intervalId = setInterval(poll, POLL_MS);
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
   const getAuthHeader = () => {
     const token = localStorage.getItem("token");
     return { headers: { Authorization: `Bearer ${token}` } };
@@ -65,7 +84,10 @@ function Admin() {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get(`${API_URL}/auth/vendor-profile`, getAuthHeader());
+      const res = await axios.get(
+        `${API_URL}/auth/vendor-profile`,
+        getAuthHeader()
+      );
       setProfile(res.data);
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -128,7 +150,10 @@ function Admin() {
         province: "",
         postalCode: "",
       },
-      vendorLocation: product.vendorLocation || { type: "Point", coordinates: [] },
+      vendorLocation: product.vendorLocation || {
+        type: "Point",
+        coordinates: [],
+      },
     });
     setShowForm(true);
   };
@@ -213,11 +238,16 @@ function Admin() {
     }
   };
 
-  const updateOrderStatus = async (orderId, orderStatus, paymentStatus) => {
+  const updateOrderStatus = async (
+    orderId,
+    orderStatus,
+    paymentStatus,
+    note
+  ) => {
     try {
       await axios.patch(
         `${API_URL}/orders/${orderId}/status`,
-        { orderStatus, paymentStatus },
+        { orderStatus, paymentStatus, note },
         getAuthHeader()
       );
       alert("Status berhasil diupdate!");
@@ -695,7 +725,7 @@ function Admin() {
                 ))}
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 flex-wrap">
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Status Pesanan
@@ -706,7 +736,8 @@ function Admin() {
                       updateOrderStatus(
                         order._id,
                         e.target.value,
-                        order.paymentStatus
+                        order.paymentStatus,
+                        order.note
                       )
                     }
                     className="border rounded px-3 py-1 text-sm"
@@ -729,7 +760,8 @@ function Admin() {
                       updateOrderStatus(
                         order._id,
                         order.orderStatus,
-                        e.target.value
+                        e.target.value,
+                        order.note
                       )
                     }
                     className="border rounded px-3 py-1 text-sm"
@@ -739,7 +771,48 @@ function Admin() {
                     <option value="failed">Failed</option>
                   </select>
                 </div>
+                <div className="flex-1 min-w-[200px]">
+                  <label className="block text-sm font-medium mb-1">
+                    Catatan (opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={order.note || ""}
+                    onChange={(e) => {
+                      const note = e.target.value;
+                      setOrders((prev) =>
+                        prev.map((o) =>
+                          o._id === order._id ? { ...o, note } : o
+                        )
+                      );
+                    }}
+                    className="w-full border rounded px-3 py-1 text-sm"
+                    placeholder="Catatan perubahan"
+                  />
+                </div>
               </div>
+
+              {order.statusHistory && order.statusHistory.length > 0 && (
+                <div className="mt-3 text-xs text-gray-600">
+                  <div className="font-semibold mb-1">Riwayat Status:</div>
+                  <div className="space-y-1 max-h-32 overflow-auto">
+                    {order.statusHistory
+                      .slice()
+                      .reverse()
+                      .map((h, idx) => (
+                        <div key={idx} className="flex gap-2">
+                          <span className="text-gray-800">
+                            {new Date(h.createdAt).toLocaleString("id-ID")}
+                          </span>
+                          <span>
+                            • {h.orderStatus}/{h.paymentStatus}
+                          </span>
+                          {h.note && <span>— {h.note}</span>}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-2 text-sm text-gray-600">
                 Metode Pembayaran: {order.paymentMethod}

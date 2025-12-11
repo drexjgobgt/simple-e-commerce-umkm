@@ -15,6 +15,7 @@ function OrderHistory() {
   const [toDate, setToDate] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
   const PAGE_SIZE = 10;
+  const POLL_MS = 20000;
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -34,6 +35,25 @@ function OrderHistory() {
     if (!token) return;
     // reload when filter changes
     fetchOrderHistory(token, 1, false);
+  }, [statusFilter, fromDate, toDate, sortOrder]);
+
+  // Polling ringan saat tab aktif
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    let intervalId;
+    const start = () => {
+      intervalId = setInterval(() => {
+        if (document.visibilityState === "visible") {
+          fetchOrderHistory(token, 1, false);
+        }
+      }, POLL_MS);
+    };
+    start();
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [statusFilter, fromDate, toDate, sortOrder]);
 
   const fetchOrderHistory = async (token, targetPage = 1, append = false) => {
