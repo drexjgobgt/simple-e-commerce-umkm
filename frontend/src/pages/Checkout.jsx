@@ -55,7 +55,14 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
         notes: formData.notes,
       };
 
-      const orderResponse = await axios.post(`${API_URL}/orders`, orderData);
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      };
+
+      const orderResponse = await axios.post(`${API_URL}/orders`, orderData, config);
       const order = orderResponse.data;
 
       // 2. Jika metode pembayaran online, proses dengan Midtrans
@@ -123,10 +130,9 @@ Silakan siapkan uang tunai saat barang tiba.`);
         navigate("/");
       }
     } catch (error) {
-      alert(
-        "❌ Terjadi kesalahan: " +
-          (error.response?.data?.message || error.message)
-      );
+      console.error("Checkout Error:", error);
+      const serverMessage = error.response?.data?.message || "Terjadi kesalahan pada server";
+      alert(`❌ Gagal membuat pesanan:\n${serverMessage}\n\nSilakan periksa kembali data Anda atau coba lagi.`);
     } finally {
       setLoading(false);
     }

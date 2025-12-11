@@ -113,6 +113,15 @@ function Navbar({ cartCount }) {
               </Link>
             )}
 
+            {user && (
+              <Link
+                to="/orders/history"
+                className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 font-medium text-sm flex items-center gap-2"
+              >
+                <span>📦 Riwayat</span>
+              </Link>
+            )}
+
             <div className="h-8 w-px bg-white/20 mx-2"></div>
 
             {user ? (
@@ -248,6 +257,14 @@ function Navbar({ cartCount }) {
                       <span className="font-medium">Dashboard Admin</span>
                     </Link>
                   )}
+                   <Link
+                      to="/orders/history"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center space-x-3 px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-all"
+                    >
+                      <span>📦</span>
+                      <span className="font-medium">Riwayat Pesanan</span>
+                    </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full mt-2 flex items-center justify-center space-x-2 px-4 py-3 text-red-300 hover:text-red-200 hover:bg-red-500/10 rounded-xl transition-all border border-red-500/20"

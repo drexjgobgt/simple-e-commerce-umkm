@@ -12,6 +12,7 @@ const adjustStockForOrder = async (order, direction = "decrease") => {
   const updated = [];
   try {
     for (const item of order.items) {
+      // Check current stock first to ensure consistency
       const product = await Product.findById(item.product);
       if (!product) {
         throw new Error(`Produk ${item.product} tidak ditemukan`);
@@ -22,15 +23,24 @@ const adjustStockForOrder = async (order, direction = "decrease") => {
       }
 
       const delta = direction === "decrease" ? -item.quantity : item.quantity;
-      product.stock += delta;
-      await product.save();
+      
+      // Use updateOne to avoid "MongoServerError: Can't extract geo keys"
+      // if the product has legacy/invalid location data
+      await Product.updateOne(
+        { _id: item.product },
+        { $inc: { stock: delta } }
+      );
+      
       updated.push({ product, delta });
     }
   } catch (error) {
     // rollback jika gagal di tengah jalan
     for (const change of updated) {
-      change.product.stock -= change.delta;
-      await change.product.save();
+      // Revert with updateOne
+      await Product.updateOne(
+        { _id: change.product._id },
+        { $inc: { stock: -change.delta } }
+      );
     }
     throw error;
   }
@@ -55,6 +65,20 @@ router.post("/", async (req, res) => {
     const { items, customerName, email, phone, address, paymentMethod, notes } =
       req.body;
 
+    // VALIDATION
+    if (!items || items.length === 0) {
+      console.error("❌ Validation Failed: Items empty");
+      return res.status(400).json({ message: "Keranjang belanja kosong" });
+    }
+    if (!customerName || !email || !phone || !paymentMethod) {
+      console.error("❌ Validation Failed: Missing customer data", { customerName, email, phone, paymentMethod });
+      return res.status(400).json({ message: "Data pelanggan tidak lengkap" });
+    }
+    if (!address || !address.city || !address.province) {
+       console.error("❌ Validation Failed: Missing address info", address);
+       return res.status(400).json({ message: "Alamat pengiriman harus lengkap (Kota dan Provinsi wajib diisi)" });
+    }
+
     // Get user ID if logged in
     const userId = getOptionalUser(req);
 
@@ -63,33 +87,35 @@ router.post("/", async (req, res) => {
       userId: userId || "guest",
       itemsCount: items.length,
       paymentMethod,
+      address
     });
+
     // Hitung total amount dan collect vendor info
     let totalAmount = 0;
     const orderItems = [];
     const vendorPaymentsMap = new Map();
 
     for (let item of items) {
+      // Validate item structure
+      if (!item.productId) {
+         console.error("❌ Validation Failed: Invalid item, missing productId", item);
+         return res.status(400).json({ message: "ID Produk tidak valid dalam item pesanan" });
+      }
+
       const product = await Product.findById(item.productId).populate("vendor");
       if (!product) {
         console.error("❌ Product not found:", item.productId);
         return res
           .status(404)
-          .json({ message: `Produk ${item.productId} tidak ditemukan` });
+          .json({ message: `Produk dengan ID ${item.productId} tidak ditemukan` });
       }
 
-      console.log(
-        "✓ Product found:",
-        product.name,
-        "- Vendor:",
-        product.vendorStoreName
-      );
-
-      // Cek stok (tanpa langsung mengurangi, akan dikurangi saat pembayaran sukses/COD)
+      // Cek stok
       if (product.stock < item.quantity) {
+        console.error("❌ Stock Insufficient:", product.name, "Stock:", product.stock, "Requested:", item.quantity);
         return res
           .status(400)
-          .json({ message: `Stok ${product.name} tidak cukup` });
+          .json({ message: `Stok ${product.name} tidak cukup (Tersisa: ${product.stock})` });
       }
 
       const itemTotal = product.price * item.quantity;
@@ -189,6 +215,11 @@ router.post("/", async (req, res) => {
     res.status(201).json(savedOrder);
   } catch (error) {
     console.error("❌ Order creation error:", error);
+    // Return specific error message if it's a validation error
+    if (error.name === 'ValidationError') {
+        const messages = Object.values(error.errors).map(val => val.message);
+        return res.status(400).json({ message: `Validasi Gagal: ${messages.join(', ')}` });
+    }
     res.status(400).json({ message: error.message });
   }
 });

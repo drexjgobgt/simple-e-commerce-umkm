@@ -18,7 +18,13 @@ function OrderHistory() {
   const POLL_MS = 20000;
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    let user = null;
+    try {
+        user = JSON.parse(localStorage.getItem("user") || "null");
+    } catch (e) {
+        console.error("Error parsing user data", e);
+        localStorage.removeItem("user"); // Clear corrupted data
+    }
     const token = localStorage.getItem("token");
 
     if (!user || !token) {

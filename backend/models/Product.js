@@ -62,7 +62,7 @@ const productSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
+        // default: "Point", // REMOVE DEFAULT to prevent invalid GeoJSON (Point without coords)
       },
       coordinates: {
         type: [Number], // [lng, lat]
