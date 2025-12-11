@@ -64,22 +64,21 @@ function Home({ addToCart }) {
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-hidden pt-20">
       {/* Abstract Background Shapes */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-br from-primary-600 via-primary-700 to-primary-900 rounded-b-[40px] shadow-2xl -z-10"></div>
-      <div className="absolute top-20 right-0 w-96 h-96 bg-accent-500/20 rounded-full blur-3xl -z-10 animate-pulse-slow"></div>
-      <div className="absolute top-40 left-0 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl -z-10"></div>
-
+      <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-50 to-white rounded-b-[50px] -z-10"></div>
+      <div className="absolute top-0 right-0 w-3/4 h-[600px] bg-gradient-to-bl from-indigo-50/50 to-transparent rounded-bl-full -z-10"></div>
+      
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12 animate-slide-up">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full text-white text-sm font-medium mb-6">
-            <span className="text-accent-300">🔥</span>
+        <div className="text-center mb-16 animate-slide-up pt-12">
+          <div className="inline-flex items-center gap-2 bg-white border border-blue-100 px-4 py-1.5 rounded-full text-blue-800 text-sm font-bold mb-6 shadow-sm">
+            <span className="text-yellow-500 text-lg">🔥</span>
             <span>Solusi Gas & Dapur UMKM No.1</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 font-display leading-tight">
-            Gas Asli, <span className="text-accent-400">Harga Pasti</span>, <br />
+          <h1 className="text-5xl md:text-7xl font-extrabold text-primary-900 mb-6 font-display leading-tight tracking-tight">
+            Gas Asli, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500">Harga Pasti</span>, <br />
             Kualitas Terjamin.
           </h1>
-          <p className="text-primary-100 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-light">
+          <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
             Platform terpercaya yang menghubungkan UMKM dengan vendor gas resmi.
             Aman, cepat, dan transparan.
           </p>
