@@ -304,6 +304,28 @@ function OrderHistory() {
                               🏪 {item.vendorStoreName}
                             </p>
                           )}
+                          {item.vendorAddress && (
+                            <p className="text-xs text-gray-500">
+                              📍 {item.vendorAddress}
+                            </p>
+                          )}
+                          {item.vendorAddressDetail?.city && (
+                            <p className="text-[11px] text-gray-400">
+                              {item.vendorAddressDetail.street
+                                ? item.vendorAddressDetail.street + ", "
+                                : ""}
+                              {item.vendorAddressDetail.district
+                                ? item.vendorAddressDetail.district + ", "
+                                : ""}
+                              {item.vendorAddressDetail.city}
+                              {item.vendorAddressDetail.province
+                                ? `, ${item.vendorAddressDetail.province}`
+                                : ""}
+                              {item.vendorAddressDetail.postalCode
+                                ? ` ${item.vendorAddressDetail.postalCode}`
+                                : ""}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-600">

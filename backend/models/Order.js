@@ -44,6 +44,21 @@ const orderSchema = new mongoose.Schema(
         },
         vendorStoreName: String,
       vendorPhone: String,
+        vendorAddress: String,
+        vendorAddressDetail: {
+          street: String,
+          district: String,
+          city: String,
+          province: String,
+          postalCode: String,
+        },
+        vendorLocation: {
+          type: {
+            type: String,
+            enum: ["Point"],
+          },
+          coordinates: [Number], // [lng, lat]
+        },
         vendorAmount: Number, // Amount yang masuk ke vendor ini
       },
     ],

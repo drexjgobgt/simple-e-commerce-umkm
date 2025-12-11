@@ -10,6 +10,7 @@ function Admin() {
   const [activeTab, setActiveTab] = useState("products");
   const [products, setProducts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [profile, setProfile] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -22,6 +23,18 @@ function Admin() {
     stock: "",
     image: "",
     unit: "unit",
+    vendorAddress: "",
+    vendorAddressDetail: {
+      street: "",
+      district: "",
+      city: "",
+      province: "",
+      postalCode: "",
+    },
+    vendorLocation: {
+      type: "Point",
+      coordinates: [],
+    },
   });
 
   useEffect(() => {
@@ -31,6 +44,7 @@ function Admin() {
       return;
     }
 
+    fetchProfile();
     fetchProducts();
     fetchOrders();
   }, []);
@@ -46,6 +60,15 @@ function Admin() {
       setProducts(response.data);
     } catch (error) {
       console.error("Error:", error);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/auth/vendor-profile`, getAuthHeader());
+      setProfile(res.data);
+    } catch (error) {
+      console.error("Error fetching profile:", error);
     }
   };
 
@@ -80,6 +103,7 @@ function Admin() {
 
       resetForm();
       fetchProducts();
+      fetchProfile();
     } catch (error) {
       alert("Error: " + (error.response?.data?.message || error.message));
     }
@@ -96,6 +120,15 @@ function Admin() {
       stock: product.stock,
       image: product.image,
       unit: product.unit,
+      vendorAddress: product.vendorAddress || "",
+      vendorAddressDetail: product.vendorAddressDetail || {
+        street: "",
+        district: "",
+        city: "",
+        province: "",
+        postalCode: "",
+      },
+      vendorLocation: product.vendorLocation || { type: "Point", coordinates: [] },
     });
     setShowForm(true);
   };
@@ -265,6 +298,174 @@ function Admin() {
                   />
                 </div>
 
+                {/* Vendor Location */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Alamat Toko (ringkas)
+                    </label>
+                    <input
+                      type="text"
+                      name="vendorAddress"
+                      value={formData.vendorAddress}
+                      onChange={handleInputChange}
+                      className="w-full border rounded px-3 py-2"
+                      placeholder="Jl. Mawar No. 1, Kota"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ringkas untuk ditampilkan cepat
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Lokasi (lng, lat)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.vendorLocation.coordinates?.[0] || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            vendorLocation: {
+                              type: "Point",
+                              coordinates: [
+                                parseFloat(e.target.value) || 0,
+                                prev.vendorLocation.coordinates?.[1] || 0,
+                              ],
+                            },
+                          }))
+                        }
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Longitude"
+                      />
+                      <input
+                        type="number"
+                        step="any"
+                        value={formData.vendorLocation.coordinates?.[1] || ""}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            vendorLocation: {
+                              type: "Point",
+                              coordinates: [
+                                prev.vendorLocation.coordinates?.[0] || 0,
+                                parseFloat(e.target.value) || 0,
+                              ],
+                            },
+                          }))
+                        }
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Latitude"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Gunakan koordinat peta (format desimal)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Jalan
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.vendorAddressDetail.street}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendorAddressDetail: {
+                            ...prev.vendorAddressDetail,
+                            street: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Kecamatan
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.vendorAddressDetail.district}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendorAddressDetail: {
+                            ...prev.vendorAddressDetail,
+                            district: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Kota
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.vendorAddressDetail.city}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendorAddressDetail: {
+                            ...prev.vendorAddressDetail,
+                            city: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Provinsi
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.vendorAddressDetail.province}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendorAddressDetail: {
+                            ...prev.vendorAddressDetail,
+                            province: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Kode Pos
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.vendorAddressDetail.postalCode}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          vendorAddressDetail: {
+                            ...prev.vendorAddressDetail,
+                            postalCode: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded px-3 py-2"
+                    />
+                  </div>
+                </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Deskripsi

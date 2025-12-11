@@ -93,6 +93,12 @@ function Navbar({ cartCount }) {
                 </svg>
                 Admin
               </Link>
+              <Link
+                to="/vendor-profile"
+                className="px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300 font-medium flex items-center gap-2"
+              >
+                📍 Profil Vendor
+              </Link>
             )}
 
             <div className="h-6 w-px bg-white/20 mx-2"></div>
@@ -197,6 +203,13 @@ function Navbar({ cartCount }) {
                 className="block px-4 py-3 rounded-lg hover:bg-white/10 transition-all"
               >
                 👨‍💼 Admin
+              </Link>
+              <Link
+                to="/vendor-profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 rounded-lg hover:bg-white/10 transition-all"
+              >
+                📍 Profil Vendor
               </Link>
             )}
             <div className="h-px bg-white/20 my-2"></div>

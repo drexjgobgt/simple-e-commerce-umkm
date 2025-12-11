@@ -8,6 +8,7 @@ import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import OrderHistory from "./pages/OrderHistory";
 import RegisterVendor from "./pages/RegisterVendor";
+import VendorProfile from "./pages/VendorProfile";
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -73,6 +74,7 @@ function App() {
           />
           <Route path="/orders/history" element={<OrderHistory />} />
           <Route path="/register-vendor" element={<RegisterVendor />} />
+          <Route path="/vendor-profile" element={<VendorProfile />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>

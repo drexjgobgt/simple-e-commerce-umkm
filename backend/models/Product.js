@@ -48,6 +48,27 @@ const productSchema = new mongoose.Schema(
     vendorPhone: {
       type: String,
     },
+    vendorAddress: {
+      type: String,
+    },
+    vendorAddressDetail: {
+      street: String,
+      district: String,
+      city: String,
+      province: String,
+      postalCode: String,
+    },
+    vendorLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        default: undefined,
+      },
+    },
     // Status
     isActive: {
       type: Boolean,
@@ -62,5 +83,7 @@ const productSchema = new mongoose.Schema(
 // Index untuk query per vendor
 productSchema.index({ vendor: 1 });
 productSchema.index({ isActive: 1 });
+productSchema.index({ "vendorAddressDetail.city": 1 });
+productSchema.index({ vendorLocation: "2dsphere" });
 
 module.exports = mongoose.model("Product", productSchema);

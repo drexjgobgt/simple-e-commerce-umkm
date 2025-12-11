@@ -18,6 +18,17 @@ function RegisterVendor() {
     storeDescription: "",
     storePhone: "",
     storeAddress: "",
+    storeAddressDetail: {
+      street: "",
+      district: "",
+      city: "",
+      province: "",
+      postalCode: "",
+    },
+    location: {
+      type: "Point",
+      coordinates: [],
+    },
     // Payment Info
     bankName: "",
     accountNumber: "",
@@ -48,6 +59,8 @@ function RegisterVendor() {
         storeDescription: formData.storeDescription,
         storePhone: formData.storePhone,
         storeAddress: formData.storeAddress,
+        storeAddressDetail: formData.storeAddressDetail,
+        location: formData.location.coordinates.length === 2 ? formData.location : undefined,
         bankName: formData.bankName,
         accountNumber: formData.accountNumber,
         accountName: formData.accountName,
@@ -290,6 +303,156 @@ function RegisterVendor() {
                     className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Jl. Merdeka No. 123, Jakarta"
                   />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Jalan
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.storeAddressDetail.street}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          storeAddressDetail: {
+                            ...prev.storeAddressDetail,
+                            street: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Kecamatan
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.storeAddressDetail.district}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          storeAddressDetail: {
+                            ...prev.storeAddressDetail,
+                            district: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Kota
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.storeAddressDetail.city}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          storeAddressDetail: {
+                            ...prev.storeAddressDetail,
+                            city: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Provinsi
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.storeAddressDetail.province}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          storeAddressDetail: {
+                            ...prev.storeAddressDetail,
+                            province: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Kode Pos
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.storeAddressDetail.postalCode}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          storeAddressDetail: {
+                            ...prev.storeAddressDetail,
+                            postalCode: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Koordinat (lng, lat)
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.location.coordinates?.[0] || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          location: {
+                            type: "Point",
+                            coordinates: [
+                              parseFloat(e.target.value) || 0,
+                              prev.location.coordinates?.[1] || 0,
+                            ],
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Longitude"
+                    />
+                    <input
+                      type="number"
+                      step="any"
+                      value={formData.location.coordinates?.[1] || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          location: {
+                            type: "Point",
+                            coordinates: [
+                              prev.location.coordinates?.[0] || 0,
+                              parseFloat(e.target.value) || 0,
+                            ],
+                          },
+                        }))
+                      }
+                      className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Latitude"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Ambil dari peta (Google Maps) dalam format desimal.
+                  </p>
                 </div>
               </div>
             )}

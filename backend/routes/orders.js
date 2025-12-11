@@ -118,6 +118,9 @@ router.post("/", async (req, res) => {
         vendorPhone: product.vendorPhone || product.vendor.storePhone,
         vendorCreds,
         vendorAmount: itemTotal,
+        vendorAddress: product.vendorAddress,
+        vendorAddressDetail: product.vendorAddressDetail,
+        vendorLocation: product.vendorLocation,
       });
 
       totalAmount += itemTotal;

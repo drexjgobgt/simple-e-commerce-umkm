@@ -185,6 +185,8 @@ router.put("/vendor-profile", async (req, res) => {
       storeDescription,
       storePhone,
       storeAddress,
+      storeAddressDetail,
+      location,
       bankName,
       accountNumber,
       accountName,
@@ -194,6 +196,10 @@ router.put("/vendor-profile", async (req, res) => {
     if (storeDescription) user.storeDescription = storeDescription;
     if (storePhone) user.storePhone = storePhone;
     if (storeAddress) user.storeAddress = storeAddress;
+    if (storeAddressDetail) user.storeAddressDetail = storeAddressDetail;
+    if (location && location.type === "Point" && Array.isArray(location.coordinates)) {
+      user.location = location;
+    }
     if (bankName) user.bankName = bankName;
     if (accountNumber) user.accountNumber = accountNumber;
     if (accountName) user.accountName = accountName;
@@ -240,6 +246,34 @@ router.put("/vendor-profile/payment", async (req, res) => {
     await user.save();
 
     res.json({ message: "Payment credentials updated" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update Vendor WhatsApp Credentials
+router.put("/vendor-profile/whatsapp", async (req, res) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return res.status(401).json({ message: "Tidak ada token" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Akses ditolak" });
+    }
+
+    const { waPhoneNumberId, waApiKey } = req.body;
+
+    user.waPhoneNumberId = waPhoneNumberId;
+    user.waApiKey = waApiKey;
+
+    await user.save();
+
+    res.json({ message: "WhatsApp credentials updated" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

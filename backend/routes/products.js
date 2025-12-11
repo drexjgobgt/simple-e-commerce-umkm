@@ -7,11 +7,26 @@ const { authMiddleware, adminMiddleware } = require("../middleware/auth");
 // Get semua produk (public) - dengan info vendor
 router.get("/", async (req, res) => {
   try {
-    const { vendor, category } = req.query;
+    const { vendor, category, city, lat, lng, radiusKm } = req.query;
 
     const filter = { isActive: true };
     if (vendor) filter.vendor = vendor;
     if (category) filter.category = category;
+    if (city) filter["vendorAddressDetail.city"] = city;
+
+    // Geo filter optional
+    if (lat && lng && radiusKm) {
+      const radiusInMeters = Number(radiusKm) * 1000;
+      filter.vendorLocation = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [Number(lng), Number(lat)],
+          },
+          $maxDistance: radiusInMeters,
+        },
+      };
+    }
 
     const products = await Product.find(filter)
       .populate("vendor", "storeName storeDescription storePhone")
@@ -68,13 +83,16 @@ router.post("/", authMiddleware, adminMiddleware, async (req, res) => {
       return res.status(403).json({ message: "Akses ditolak" });
     }
 
-    // Create product dengan vendor info
+    // Create product dengan vendor info & lokasi
     const product = new Product({
       ...req.body,
       vendor: vendor._id,
       vendorName: vendor.name,
       vendorStoreName: vendor.storeName,
       vendorPhone: vendor.storePhone,
+      vendorAddress: vendor.storeAddress,
+      vendorAddressDetail: vendor.storeAddressDetail,
+      vendorLocation: vendor.location,
     });
 
     const savedProduct = await product.save();

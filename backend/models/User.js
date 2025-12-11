@@ -37,6 +37,24 @@ const userSchema = new mongoose.Schema(
     storeAddress: {
       type: String,
     },
+    storeAddressDetail: {
+      street: String,
+      district: String,
+      city: String,
+      province: String,
+      postalCode: String,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [lng, lat]
+        default: undefined,
+      },
+    },
     // Vendor-specific WhatsApp Cloud API (opsional)
     waPhoneNumberId: {
       type: String,
@@ -87,5 +105,8 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
+
+// Geo index for vendor location
+userSchema.index({ location: "2dsphere" });
 
 module.exports = mongoose.model("User", userSchema);

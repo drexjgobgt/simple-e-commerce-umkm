@@ -10,6 +10,8 @@ function PaymentSetupTab() {
   const [formData, setFormData] = useState({
     midtransClientKey: "",
     midtransServerKey: "",
+    waPhoneNumberId: "",
+    waApiKey: "",
   });
 
   useEffect(() => {
@@ -31,6 +33,8 @@ function PaymentSetupTab() {
       setFormData({
         midtransClientKey: response.data.midtransClientKey || "",
         midtransServerKey: response.data.midtransServerKey || "",
+        waPhoneNumberId: response.data.waPhoneNumberId || "",
+        waApiKey: response.data.waApiKey || "",
       });
     } catch (error) {
       console.error(
@@ -54,7 +58,18 @@ function PaymentSetupTab() {
     try {
       await axios.put(
         `${API_URL}/auth/vendor-profile/payment`,
-        formData,
+        {
+          midtransClientKey: formData.midtransClientKey,
+          midtransServerKey: formData.midtransServerKey,
+        },
+        getAuthHeader()
+      );
+      await axios.put(
+        `${API_URL}/auth/vendor-profile/whatsapp`,
+        {
+          waPhoneNumberId: formData.waPhoneNumberId,
+          waApiKey: formData.waApiKey,
+        },
         getAuthHeader()
       );
       alert("✅ Kunci pembayaran berhasil disimpan!");
@@ -83,11 +98,10 @@ function PaymentSetupTab() {
     <div className="bg-white rounded-2xl shadow-lg p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2 text-gray-800">
-          💳 Setup Pembayaran Midtrans
+          💳 Setup Pembayaran & WhatsApp (Vendor)
         </h2>
         <p className="text-gray-600">
-          Konfigurasi kunci API Midtrans untuk menerima pembayaran secara
-          mandiri
+          Konfigurasi kunci Midtrans dan WhatsApp Cloud API untuk toko Anda
         </p>
       </div>
 
@@ -164,6 +178,51 @@ function PaymentSetupTab() {
           <p className="text-xs text-gray-500 mt-1">
             Kunci ini digunakan di frontend untuk inisialisasi pembayaran
           </p>
+        </div>
+
+        <div className="border-t pt-4">
+          <h3 className="font-semibold mb-2 text-gray-800">
+            📲 WhatsApp Cloud API (Vendor)
+          </h3>
+          <p className="text-sm text-gray-600 mb-3">
+            Opsional. Jika diisi, struk vendor akan dikirim memakai akun WA
+            bisnis Anda. Jika kosong, akan memakai kredensial global (jika
+            tersedia).
+          </p>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                WA Phone Number ID
+              </label>
+              <input
+                type="text"
+                name="waPhoneNumberId"
+                value={formData.waPhoneNumberId}
+                onChange={handleInputChange}
+                placeholder="misal: 123456789012345"
+                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Dari WhatsApp Cloud API (Meta). Format numerik ID.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                WA API Key (Access Token)
+              </label>
+              <input
+                type="password"
+                name="waApiKey"
+                value={formData.waApiKey}
+                onChange={handleInputChange}
+                placeholder="EAAD... (Access Token)"
+                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Gunakan Permanent Access Token. Jaga kerahasiaannya.
+              </p>
+            </div>
+          </div>
         </div>
 
         <div>

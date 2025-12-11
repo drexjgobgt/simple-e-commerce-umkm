@@ -8,6 +8,9 @@ function Home({ addToCart }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [city, setCity] = useState("");
+  const [radiusKm, setRadiusKm] = useState("");
+  const [coords, setCoords] = useState({ lat: "", lng: "" });
 
   useEffect(() => {
     fetchProducts();
@@ -15,7 +18,15 @@ function Home({ addToCart }) {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`);
+      const response = await axios.get(`${API_URL}/products`, {
+        params: {
+          category: filter !== "all" ? filter : undefined,
+          city: city || undefined,
+          lat: coords.lat || undefined,
+          lng: coords.lng || undefined,
+          radiusKm: radiusKm || undefined,
+        },
+      });
       setProducts(response.data);
       setLoading(false);
     } catch (error) {
@@ -132,6 +143,67 @@ function Home({ addToCart }) {
                 {cat === "all" ? "🏪 Semua Produk" : cat}
               </button>
             ))}
+          </div>
+          <div className="mt-6 grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">
+                Kota (opsional)
+              </label>
+              <input
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="w-full border rounded-xl px-4 py-3"
+                placeholder="contoh: Jakarta"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">
+                Radius (km) & koordinat
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(e.target.value)}
+                  className="w-full border rounded-xl px-3 py-3"
+                  placeholder="Radius"
+                />
+                <input
+                  type="number"
+                  step="any"
+                  value={coords.lng}
+                  onChange={(e) =>
+                    setCoords((prev) => ({ ...prev, lng: e.target.value }))
+                  }
+                  className="w-full border rounded-xl px-3 py-3"
+                  placeholder="Longitude"
+                />
+                <input
+                  type="number"
+                  step="any"
+                  value={coords.lat}
+                  onChange={(e) =>
+                    setCoords((prev) => ({ ...prev, lat: e.target.value }))
+                  }
+                  className="w-full border rounded-xl px-3 py-3"
+                  placeholder="Latitude"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Isi lat/lng + radius untuk filter jarak (opsional)
+              </p>
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={fetchProducts}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+              >
+                Terapkan Filter Lokasi
+              </button>
+            </div>
           </div>
         </div>
 

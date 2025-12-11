@@ -129,6 +129,28 @@ function ProductDetail({ addToCart }) {
               <p className="text-gray-600">
                 {product.vendor?.storeDescription}
               </p>
+              {product.vendorAddress && (
+                <p className="text-gray-700">
+                  <strong>Alamat:</strong> {product.vendorAddress}
+                </p>
+              )}
+              {product.vendorAddressDetail?.city && (
+                <p className="text-gray-500 text-xs">
+                  {product.vendorAddressDetail.street
+                    ? product.vendorAddressDetail.street + ", "
+                    : ""}
+                  {product.vendorAddressDetail.district
+                    ? product.vendorAddressDetail.district + ", "
+                    : ""}
+                  {product.vendorAddressDetail.city}
+                  {product.vendorAddressDetail.province
+                    ? `, ${product.vendorAddressDetail.province}`
+                    : ""}
+                  {product.vendorAddressDetail.postalCode
+                    ? ` ${product.vendorAddressDetail.postalCode}`
+                    : ""}
+                </p>
+              )}
             </div>
           </div>
 
