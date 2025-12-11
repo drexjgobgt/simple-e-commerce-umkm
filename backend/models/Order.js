@@ -43,6 +43,7 @@ const orderSchema = new mongoose.Schema(
           ref: "User",
         },
         vendorStoreName: String,
+      vendorPhone: String,
         vendorAmount: Number, // Amount yang masuk ke vendor ini
       },
     ],
@@ -64,6 +65,11 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
+    },
+    // Inventory guard to avoid double adjustments
+    stockAdjusted: {
+      type: Boolean,
+      default: false,
     },
     notes: String,
     // SPLIT PAYMENT INFO

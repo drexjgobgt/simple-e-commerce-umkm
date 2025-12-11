@@ -37,6 +37,13 @@ const userSchema = new mongoose.Schema(
     storeAddress: {
       type: String,
     },
+    // Vendor-specific WhatsApp Cloud API (opsional)
+    waPhoneNumberId: {
+      type: String,
+    },
+    waApiKey: {
+      type: String,
+    },
     // Payment Information (untuk admin)
     bankName: {
       type: String,

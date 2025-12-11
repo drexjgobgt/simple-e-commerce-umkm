@@ -1,6 +1,9 @@
 const express = require("express");
+const crypto = require("crypto");
 const router = express.Router();
 const Order = require("../models/Order");
+const Product = require("../models/Product");
+const notifications = require("../utils/notifications");
 
 // Import snap dengan error handling
 let snap;
@@ -13,6 +16,30 @@ try {
   console.error("❌ Failed to load Midtrans config:", error.message);
   useMockPayment = true;
 }
+
+// Utility: adjust stock based on order items
+const adjustStockForOrder = async (order, direction = "decrease") => {
+  const updated = [];
+  try {
+    for (const item of order.items) {
+      const product = await Product.findById(item.product);
+      if (!product) throw new Error(`Produk ${item.product} tidak ditemukan`);
+      if (direction === "decrease" && product.stock < item.quantity) {
+        throw new Error(`Stok ${product.name} tidak cukup`);
+      }
+      const delta = direction === "decrease" ? -item.quantity : item.quantity;
+      product.stock += delta;
+      await product.save();
+      updated.push({ product, delta });
+    }
+  } catch (error) {
+    for (const change of updated) {
+      change.product.stock -= change.delta;
+      await change.product.save();
+    }
+    throw error;
+  }
+};
 
 // Create Midtrans payment token
 router.post("/create-token", async (req, res) => {
@@ -36,10 +63,16 @@ router.post("/create-token", async (req, res) => {
       // Auto update order ke paid setelah 3 detik (simulasi)
       setTimeout(async () => {
         try {
-          await Order.findByIdAndUpdate(orderId, {
-            paymentStatus: "paid",
-            orderStatus: "processing",
-          });
+          const order = await Order.findById(orderId);
+          if (order) {
+            if (!order.stockAdjusted) {
+              await adjustStockForOrder(order, "decrease");
+              order.stockAdjusted = true;
+            }
+            order.paymentStatus = "paid";
+            order.orderStatus = "processing";
+            await order.save();
+          }
           console.log("✅ Mock payment completed for order:", orderId);
         } catch (error) {
           console.error("Mock payment update error:", error);
@@ -196,6 +229,21 @@ router.post("/notification", async (req, res) => {
     }
 
     const notification = req.body;
+
+    // Verify signature to avoid spoofed callbacks
+    const serverKey = process.env.MIDTRANS_SERVER_KEY;
+    const expectedSignature = crypto
+      .createHash("sha512")
+      .update(
+        `${notification.order_id}${notification.status_code}${notification.gross_amount}${serverKey}`
+      )
+      .digest("hex");
+
+    if (notification.signature_key !== expectedSignature) {
+      console.warn("⚠️  Invalid Midtrans signature for order", notification.order_id);
+      return res.status(400).json({ message: "Invalid signature" });
+    }
+
     const statusResponse = await snap.transaction.notification(notification);
 
     const orderId = statusResponse.order_id;
@@ -232,18 +280,36 @@ router.post("/notification", async (req, res) => {
       orderStatus = "pending";
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      orderId,
-      {
-        paymentStatus: paymentStatus,
-        orderStatus: orderStatus,
-      },
-      { new: true }
-    );
-
-    if (!updatedOrder) {
+    const order = await Order.findById(orderId);
+    if (!order) {
       console.error(`Order ${orderId} not found`);
       return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Adjust inventory when payment settled; restore when failed/cancelled
+    if (paymentStatus === "paid" && !order.stockAdjusted) {
+      await adjustStockForOrder(order, "decrease");
+      order.stockAdjusted = true;
+    }
+    if (
+      ["failed"].includes(paymentStatus) &&
+      order.stockAdjusted &&
+      ["cancelled"].includes(orderStatus)
+    ) {
+      await adjustStockForOrder(order, "increase");
+      order.stockAdjusted = false;
+    }
+
+    order.paymentStatus = paymentStatus;
+    order.orderStatus = orderStatus;
+    const updatedOrder = await order.save();
+
+    if (paymentStatus === "paid") {
+      notifications
+        .sendReceipts(updatedOrder)
+        .catch((err) =>
+          console.error("Receipt send error (midtrans webhook):", err.message)
+        );
     }
 
     console.log(

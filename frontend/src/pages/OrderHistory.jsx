@@ -8,6 +8,13 @@ function OrderHistory() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const PAGE_SIZE = 10;
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -19,18 +26,42 @@ function OrderHistory() {
       return;
     }
 
-    fetchOrderHistory(token);
+    fetchOrderHistory(token, 1, false);
   }, []);
 
-  const fetchOrderHistory = async (token) => {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    // reload when filter changes
+    fetchOrderHistory(token, 1, false);
+  }, [statusFilter, fromDate, toDate, sortOrder]);
+
+  const fetchOrderHistory = async (token, targetPage = 1, append = false) => {
     try {
+      if (!append) setLoading(true);
       // Use secure endpoint dengan authentication
       const response = await axios.get(`${API_URL}/orders/my-orders`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        params: {
+          page: targetPage,
+          limit: PAGE_SIZE,
+          status: statusFilter || undefined,
+          from: fromDate || undefined,
+          to: toDate || undefined,
+          sort: sortOrder,
+        },
       });
-      setOrders(response.data);
+
+      const data = response.data;
+      if (append) {
+        setOrders((prev) => [...prev, ...data.orders]);
+      } else {
+        setOrders(data.orders);
+      }
+      setPage(data.page);
+      setHasMore(data.hasMore);
     } catch (error) {
       console.error("Error fetching order history:", error);
       if (error.response?.status === 401) {
@@ -103,13 +134,81 @@ function OrderHistory() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Riwayat Pesanan
-          </h1>
-          <p className="text-gray-600">
-            Lihat semua pesanan yang pernah Anda buat
-          </p>
+        <div className="mb-8 flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                Riwayat Pesanan
+              </h1>
+              <p className="text-gray-600">
+                Lihat semua pesanan yang pernah Anda buat
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="text-sm text-gray-600">Status:</label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              >
+                <option value="">Semua</option>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+
+              <label className="text-sm text-gray-600">Sort:</label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              >
+                <option value="desc">Terbaru</option>
+                <option value="asc">Terlama</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                Dari tanggal
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">
+                Sampai tanggal
+              </label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="border rounded px-3 py-2 text-sm"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                  setStatusFilter("");
+                  setSortOrder("desc");
+                }}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+              >
+                Reset Filter
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Orders List */}
@@ -270,6 +369,25 @@ function OrderHistory() {
             </div>
           ))}
         </div>
+
+        {/* Pagination */}
+        {hasMore && (
+          <div className="mt-10 flex justify-center">
+            <button
+              onClick={() =>
+                fetchOrderHistory(
+                  localStorage.getItem("token"),
+                  page + 1,
+                  true
+                )
+              }
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+              disabled={loading}
+            >
+              {loading ? "Memuat..." : "Muat Lagi"}
+            </button>
+          </div>
+        )}
 
         {/* Back Button */}
         <div className="mt-8 text-center">
