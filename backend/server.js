@@ -2,11 +2,31 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
 
-// Middleware
+// Security Middleware
+app.use(helmet());
 app.use(cors());
+
+// Performance Middleware
+app.use(compression());
+// Logging
+app.use(morgan("dev"));
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later",
+});
+app.use("/api", limiter);
+
+// Middleware
 app.use(express.json());
 
 // MongoDB Connection

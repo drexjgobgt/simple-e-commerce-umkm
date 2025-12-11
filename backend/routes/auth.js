@@ -3,8 +3,19 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+const {
+  validateRegister,
+  validateRegisterVendor,
+  validateLogin,
+  handleValidationErrors,
+} = require("../middleware/validation");
+
 // Register Customer (Public)
-router.post("/register", async (req, res) => {
+router.post(
+  "/register",
+  validateRegister,
+  handleValidationErrors,
+  async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
@@ -28,7 +39,11 @@ router.post("/register", async (req, res) => {
 });
 
 // Register Admin/Vendor (Dengan Secret Key)
-router.post("/register-vendor", async (req, res) => {
+router.post(
+  "/register-vendor",
+  validateRegisterVendor,
+  handleValidationErrors,
+  async (req, res) => {
   try {
     const {
       email,
@@ -96,7 +111,7 @@ router.post("/register-vendor", async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", validateLogin, handleValidationErrors, async (req, res) => {
   try {
     const { email, password } = req.body;
 

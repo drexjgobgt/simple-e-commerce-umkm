@@ -1,14 +1,22 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { useState } from "react";
+import { useState, Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
-import Home from "./pages/Home";
-import ProductDetail from "./pages/ProductDetail";
-import Checkout from "./pages/Checkout";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
-import OrderHistory from "./pages/OrderHistory";
-import RegisterVendor from "./pages/RegisterVendor";
-import VendorProfile from "./pages/VendorProfile";
+
+// Lazy Load Pages
+const Home = lazy(() => import("./pages/Home"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Login = lazy(() => import("./pages/Login"));
+const OrderHistory = lazy(() => import("./pages/OrderHistory"));
+const RegisterVendor = lazy(() => import("./pages/RegisterVendor"));
+const VendorProfile = lazy(() => import("./pages/VendorProfile"));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-primary-50">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+  </div>
+);
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -51,33 +59,35 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-slate-50">
         <Navbar
           cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         />
-        <Routes>
-          <Route path="/" element={<Home addToCart={addToCart} />} />
-          <Route
-            path="/product/:id"
-            element={<ProductDetail addToCart={addToCart} />}
-          />
-          <Route
-            path="/checkout"
-            element={
-              <Checkout
-                cart={cart}
-                updateQuantity={updateQuantity}
-                removeFromCart={removeFromCart}
-                clearCart={clearCart}
-              />
-            }
-          />
-          <Route path="/orders/history" element={<OrderHistory />} />
-          <Route path="/register-vendor" element={<RegisterVendor />} />
-          <Route path="/vendor-profile" element={<VendorProfile />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/admin" element={<Admin />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home addToCart={addToCart} />} />
+            <Route
+              path="/product/:id"
+              element={<ProductDetail addToCart={addToCart} />}
+            />
+            <Route
+              path="/checkout"
+              element={
+                <Checkout
+                  cart={cart}
+                  updateQuantity={updateQuantity}
+                  removeFromCart={removeFromCart}
+                  clearCart={clearCart}
+                />
+              }
+            />
+            <Route path="/orders/history" element={<OrderHistory />} />
+            <Route path="/register-vendor" element={<RegisterVendor />} />
+            <Route path="/vendor-profile" element={<VendorProfile />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/admin" element={<Admin />} />
+          </Routes>
+        </Suspense>
       </div>
     </Router>
   );
