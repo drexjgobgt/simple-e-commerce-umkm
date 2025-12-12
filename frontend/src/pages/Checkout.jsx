@@ -140,21 +140,24 @@ Silakan siapkan uang tunai saat barang tiba.`);
 
   if (cart.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h2 className="text-2xl font-bold mb-4">Keranjang Kosong</h2>
-        <p className="text-gray-600 mb-4">Belum ada produk di keranjang Anda</p>
-        <button
-          onClick={() => navigate("/")}
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-        >
-          Belanja Sekarang
-        </button>
+      <div className="min-h-screen pt-24 pb-12 bg-slate-50">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-bold mb-4">Keranjang Kosong</h2>
+          <p className="text-gray-600 mb-4">Belum ada produk di keranjang Anda</p>
+          <button
+            onClick={() => navigate("/")}
+            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          >
+            Belanja Sekarang
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen pt-24 pb-12 bg-slate-50">
+      <div className="container mx-auto px-4">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid md:grid-cols-3 gap-8">
@@ -166,47 +169,55 @@ Silakan siapkan uang tunai saat barang tiba.`);
             {cart.map((item) => (
               <div
                 key={item._id}
-                className="flex items-center gap-4 border-b py-4"
+                className="flex flex-col sm:flex-row sm:items-center gap-4 border-b border-gray-100 py-6 last:border-0"
               >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover rounded"
-                />
-
-                <div className="flex-1">
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-gray-600">
-                    Rp {item.price.toLocaleString("id-ID")}
-                  </p>
+                <div className="flex items-start gap-4 flex-1">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-24 h-24 sm:w-20 sm:h-20 object-cover rounded-xl shadow-sm"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-800 line-clamp-2">{item.name}</h3>
+                    <p className="text-primary-600 font-medium text-sm mt-1">
+                      Rp {item.price.toLocaleString("id-ID")}
+                    </p>
+                    <div className="sm:hidden mt-3">
+                       <div className="font-bold text-lg text-primary-700">
+                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto mt-2 sm:mt-0">
+                  <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
+                    <button
+                      onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                      className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-primary-600 font-bold transition-all"
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center font-bold text-gray-700">{item.quantity}</span>
+                    <button
+                      onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                      className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm text-gray-600 hover:text-primary-600 font-bold transition-all"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <div className="hidden sm:block font-bold text-gray-800 w-32 text-right">
+                    Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                  </div>
+
                   <button
-                    onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                    className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
+                    onClick={() => removeFromCart(item._id)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
                   >
-                    -
-                  </button>
-                  <span className="px-4">{item.quantity}</span>
-                  <button
-                    onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                    className="bg-gray-200 px-2 py-1 rounded hover:bg-gray-300"
-                  >
-                    +
+                    🗑️
                   </button>
                 </div>
-
-                <div className="font-semibold">
-                  Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                </div>
-
-                <button
-                  onClick={() => removeFromCart(item._id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  🗑️
-                </button>
               </div>
             ))}
           </div>
@@ -387,6 +398,7 @@ Silakan siapkan uang tunai saat barang tiba.`);
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

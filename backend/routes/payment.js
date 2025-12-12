@@ -56,8 +56,28 @@ router.post("/create-token", async (req, res) => {
     console.log("📦 Creating payment token for order:", orderId);
     console.log("💰 Amount:", amount);
 
-    // MOCK PAYMENT MODE - untuk development tanpa Midtrans
-    if (useMockPayment || !snap) {
+    // Find Admin to get Payment Keys
+    const User = require("../models/User");
+    const admin = await User.findOne({ role: "admin" });
+
+    let currentSnap = snap;
+    let isDynamicKey = false;
+
+    if (admin && admin.midtransServerKey && admin.midtransClientKey) {
+       console.log("🔑 Using Admin's Custom Midtrans Keys from DB");
+       const midtransClient = require("midtrans-client");
+       currentSnap = new midtransClient.Snap({
+          isProduction: false, // Default to sandbox for safety, or add a field in DB for isProduction
+          serverKey: admin.midtransServerKey,
+          clientKey: admin.midtransClientKey
+       });
+       isDynamicKey = true;
+    } else {
+       console.log("🔑 Using Default Env Midtrans Keys");
+    }
+
+    // MOCK PAYMENT MODE - override if explicit mock or no snap available at all
+    if (useMockPayment || (!currentSnap && !isDynamicKey)) {
       console.log("⚠️  MOCK PAYMENT MODE: Using fake payment token");
 
       // Auto update order ke paid setelah 3 detik (simulasi)
@@ -65,7 +85,7 @@ router.post("/create-token", async (req, res) => {
         try {
           const order = await Order.findById(orderId);
           if (order) {
-            if (!order.stockAdjusted) {
+             if (!order.stockAdjusted) {
               await adjustStockForOrder(order, "decrease");
               order.stockAdjusted = true;
             }
@@ -112,7 +132,7 @@ router.post("/create-token", async (req, res) => {
     };
 
     console.log("🚀 Sending request to Midtrans...");
-    const transaction = await snap.createTransaction(parameter);
+    const transaction = await currentSnap.createTransaction(parameter);
     console.log("✅ Payment token created successfully");
 
     res.json({

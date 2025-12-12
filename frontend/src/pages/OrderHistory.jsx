@@ -134,8 +134,8 @@ function OrderHistory() {
 
   if (orders.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-        <div className="container mx-auto px-4 py-16 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 pt-28">
+        <div className="container mx-auto px-4 text-center">
           <div className="max-w-md mx-auto">
             <div className="text-6xl mb-6">📦</div>
             <h2 className="text-3xl font-bold mb-4 text-gray-800">
@@ -157,83 +157,36 @@ function OrderHistory() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-100/50 to-transparent -z-10"></div>
+
+      <div className="container mx-auto px-4 pt-24 pb-12 max-w-5xl">
         {/* Header */}
-        <div className="mb-8 flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Riwayat Pesanan
-              </h1>
-              <p className="text-gray-600">
-                Lihat semua pesanan yang pernah Anda buat
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-sm text-gray-600">Status:</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              >
-                <option value="">Semua</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-
-              <label className="text-sm text-gray-600">Sort:</label>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              >
-                <option value="desc">Terbaru</option>
-                <option value="asc">Terlama</option>
-              </select>
-            </div>
+        <div className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary-700 to-indigo-700 bg-clip-text text-transparent">
+              Riwayat Pesanan
+            </h1>
+            <p className="text-gray-600">
+              Pantau status pengiriman gas anda
+            </p>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">
-                Dari tanggal
-              </label>
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">
-                Sampai tanggal
-              </label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="border rounded px-3 py-2 text-sm"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                onClick={() => {
-                  setFromDate("");
-                  setToDate("");
-                  setStatusFilter("");
-                  setSortOrder("desc");
-                }}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-              >
-                Reset Filter
-              </button>
-            </div>
+          <div className="glass p-2 rounded-xl flex items-center gap-2 overflow-x-auto scrollbar-hide max-w-full">
+               {["", "pending", "processing", "shipped", "delivered"].map(status => (
+                   <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                        statusFilter === status 
+                        ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30" 
+                        : "text-gray-600 hover:bg-white/50"
+                    }`}
+                   >
+                       {status === "" ? "Semua" : status.charAt(0).toUpperCase() + status.slice(1)}
+                   </button>
+               ))}
           </div>
         </div>
 
@@ -242,177 +195,93 @@ function OrderHistory() {
           {orders.map((order) => (
             <div
               key={order._id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300"
+              className="glass-card rounded-2xl overflow-hidden group hover:shadow-2xl transition-all duration-300"
             >
               {/* Order Header */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-lg mb-1">
-                      Order #{order._id.slice(-8).toUpperCase()}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      📅{" "}
-                      {new Date(order.createdAt).toLocaleDateString("id-ID", {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <div className="bg-white/50 p-5 border-b border-white/40 flex flex-col sm:flex-row justify-between gap-4">
+                <div className="flex gap-4 items-center">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-2xl shadow-inner">
+                        📦
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                             <h3 className="font-bold text-gray-800">
+                                Order #{order._id.slice(-6).toUpperCase()}
+                            </h3>
+                             <span className="text-xs text-gray-400">•</span>
+                             <span className="text-sm text-gray-500">
+                                {new Date(order.createdAt).toLocaleDateString("id-ID", {
+                                    day: "numeric", month: "short", year: "numeric"
+                                })}
+                             </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                             <span className={`px-2.5 py-0.5 text-xs rounded-full font-semibold border ${
+                                 order.paymentStatus === 'paid' 
+                                 ? 'bg-green-50 text-green-700 border-green-200' 
+                                 : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                             }`}>
+                                 {order.paymentStatus === 'paid' ? 'LUNAS' : 'BELUM BAYAR'}
+                             </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col sm:items-end justify-center">
+                    <div className="text-2xl font-bold text-primary-700">
                       Rp {order.totalAmount.toLocaleString("id-ID")}
                     </div>
-                    <div className="flex gap-2 mt-2 justify-end">
-                      <span
-                        className={`px-3 py-1 text-xs rounded-full font-semibold ${getStatusBadge(
+                    <span
+                        className={`text-sm font-medium px-3 py-1 rounded-full mt-1 w-fit ${getStatusBadge(
                           order.orderStatus
                         )}`}
                       >
                         {order.orderStatus.toUpperCase()}
                       </span>
-                      <span
-                        className={`px-3 py-1 text-xs rounded-full font-semibold ${getPaymentBadge(
-                          order.paymentStatus
-                        )}`}
-                      >
-                        {order.paymentStatus === "paid" ? "✓ PAID" : "PENDING"}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
 
               {/* Order Body */}
-              <div className="p-6">
-                {/* Customer Info */}
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-semibold mb-2 text-gray-800">
-                    📍 Informasi Pengiriman
-                  </h4>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p>
-                      <strong>Nama:</strong> {order.customerName}
-                    </p>
-                    <p>
-                      <strong>Email:</strong> {order.email}
-                    </p>
-                    <p>
-                      <strong>Telepon:</strong> {order.phone}
-                    </p>
-                    <p>
-                      <strong>Alamat:</strong> {order.address.street},{" "}
-                      {order.address.city}, {order.address.province}{" "}
-                      {order.address.postalCode}
-                    </p>
-                  </div>
-                </div>
-
+              <div className="p-5">
                 {/* Items */}
-                <div className="mb-4">
-                  <h4 className="font-semibold mb-3 text-gray-800">
-                    📦 Produk yang Dipesan
-                  </h4>
-                  <div className="space-y-2">
+                <div className="space-y-4 mb-4">
                     {order.items.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                        className="flex gap-4 p-3 rounded-xl bg-white/40 hover:bg-white/70 transition-colors border border-transparent hover:border-white/50"
                       >
+                         {/* Placeholder image if not stored in order item, assuming simplistic data structure */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl shadow-sm">
+                            🔥
+                        </div>
                         <div className="flex-1">
-                          <p className="font-medium text-gray-800">
+                          <p className="font-bold text-gray-800 line-clamp-2">
                             {item.name}
                           </p>
-                          {item.vendorStoreName && (
-                            <p className="text-xs text-gray-500">
-                              🏪 {item.vendorStoreName}
-                            </p>
-                          )}
-                          {item.vendorAddress && (
-                            <p className="text-xs text-gray-500">
-                              📍 {item.vendorAddress}
-                            </p>
-                          )}
-                          {item.vendorAddressDetail?.city && (
-                            <p className="text-[11px] text-gray-400">
-                              {item.vendorAddressDetail.street
-                                ? item.vendorAddressDetail.street + ", "
-                                : ""}
-                              {item.vendorAddressDetail.district
-                                ? item.vendorAddressDetail.district + ", "
-                                : ""}
-                              {item.vendorAddressDetail.city}
-                              {item.vendorAddressDetail.province
-                                ? `, ${item.vendorAddressDetail.province}`
-                                : ""}
-                              {item.vendorAddressDetail.postalCode
-                                ? ` ${item.vendorAddressDetail.postalCode}`
-                                : ""}
-                            </p>
-                          )}
+                          <p className="text-sm text-gray-500 mt-0.5">
+                            {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                          </p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-600">
-                            {item.quantity} × Rp{" "}
-                            {item.price.toLocaleString("id-ID")}
-                          </p>
-                          <p className="font-semibold text-blue-600">
-                            Rp{" "}
-                            {(item.price * item.quantity).toLocaleString(
-                              "id-ID"
-                            )}
-                          </p>
+                        <div className="text-right font-semibold text-gray-700 self-center">
+                             Rp {(item.price * item.quantity).toLocaleString("id-ID")}
                         </div>
                       </div>
                     ))}
-                  </div>
                 </div>
 
-                {/* Payment Info */}
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span>💳 Metode Pembayaran:</span>
-                    <span className="font-semibold">{order.paymentMethod}</span>
-                  </div>
-                  {order.notes && (
-                    <div className="mt-2 text-sm">
-                      <span className="text-gray-600">📝 Catatan:</span>
-                      <span className="ml-2 text-gray-700">{order.notes}</span>
+                {/* Footer Info */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-gray-100/50 gap-4 text-sm text-gray-600">
+                    <div>
+                         <span className="block font-semibold text-gray-700 mb-1">Dikirim ke:</span>
+                         {order.address.street}, {order.address.city}
                     </div>
-                  )}
+                    {/* Action Buttons (Optional placeholder for future like 'Track', 'Invoice') */}
+                    <div>
+                        <button className="text-primary-600 font-semibold hover:text-primary-800 transition-colors text-sm">
+                            Lacak Pengiriman →
+                        </button>
+                    </div>
                 </div>
-
-                {/* Vendor Payments Info (if exists) */}
-                {order.vendorPayments && order.vendorPayments.length > 0 && (
-                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-sm text-gray-800">
-                      💰 Pembayaran Per Vendor
-                    </h4>
-                    <div className="space-y-1">
-                      {order.vendorPayments.map((vp, idx) => (
-                        <div key={idx} className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {vp.vendorStoreName}
-                          </span>
-                          <span className="font-semibold">
-                            Rp {vp.amount.toLocaleString("id-ID")}
-                            <span
-                              className={`ml-2 text-xs ${
-                                vp.paymentStatus === "paid"
-                                  ? "text-green-600"
-                                  : "text-yellow-600"
-                              }`}
-                            >
-                              ({vp.paymentStatus})
-                            </span>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           ))}
@@ -429,21 +298,21 @@ function OrderHistory() {
                   true
                 )
               }
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold"
+              className="px-8 py-3 bg-white text-primary-600 border border-primary-200 shadow-lg shadow-primary-600/10 rounded-full hover:bg-primary-50 transition-all font-bold transform hover:-translate-y-1"
               disabled={loading}
             >
-              {loading ? "Memuat..." : "Muat Lagi"}
+              {loading ? "Memuat..." : "Tampilkan Lebih Banyak"}
             </button>
           </div>
         )}
 
         {/* Back Button */}
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center sm:hidden">
           <button
             onClick={() => navigate("/")}
-            className="text-blue-600 hover:text-blue-800 font-semibold"
+            className="text-gray-500 hover:text-gray-800 font-medium"
           >
-            ← Kembali ke Beranda
+            ← Kembali
           </button>
         </div>
       </div>

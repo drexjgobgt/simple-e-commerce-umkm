@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 
 function Navbar({ cartCount }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const location = useLocation();
@@ -30,8 +31,8 @@ function Navbar({ cartCount }) {
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
         scrolled
-          ? "glass shadow-lg py-2"
-          : "bg-gradient-to-r from-primary-900/90 to-primary-800/90 backdrop-blur-sm py-4"
+          ? "glass py-2"
+          : "bg-gradient-to-r from-primary-900/80 to-primary-800/80 backdrop-blur-md py-4 border-b border-white/10"
       }`}
     >
       <div className="container mx-auto px-4">
@@ -72,13 +73,34 @@ function Navbar({ cartCount }) {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-2">
             {navLinks.map((link) => (
-              <Link
+              <a
                 key={link.name}
-                to={link.path}
-                className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 font-medium text-sm"
+                href={link.path}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (link.name === "Produk") {
+                    if (location.pathname === "/") {
+                      const element = document.getElementById("products");
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth" });
+                      }
+                    } else {
+                      window.location.href = "/#products";
+                    }
+                  } else {
+                     if (link.path === "/") {
+                        if (location.pathname === "/") {
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                        } else {
+                            window.location.href = "/";
+                        }
+                     }
+                  }
+                }}
+                className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 font-medium text-sm cursor-pointer"
               >
                 {link.name}
-              </Link>
+              </a>
             ))}
 
             <Link
@@ -93,44 +115,20 @@ function Navbar({ cartCount }) {
               )}
             </Link>
 
-            {user && user.role === "admin" && (
-              <div className="flex items-center space-x-2 border-l border-white/20 pl-2">
-                <Link
-                  to="/admin"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-500 transition-all duration-300 font-medium text-sm shadow-lg shadow-primary-900/20"
-                >
-                  Dashboard
-                </Link>
-              </div>
-            )}
-
-            {!user && (
-              <Link
-                to="/register-vendor"
-                className="px-4 py-2 text-accent-300 hover:text-accent-200 hover:bg-accent-500/10 rounded-lg transition-all duration-300 font-medium text-sm border border-accent-500/30"
-              >
-                Jadi Vendor
-              </Link>
-            )}
-
-            {user && (
-              <Link
-                to="/orders/history"
-                className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 font-medium text-sm flex items-center gap-2"
-              >
-                <span>📦 Riwayat</span>
-              </Link>
-            )}
+            {/* Links moved to Dropdown for better UI */}
 
             <div className="h-8 w-px bg-white/20 mx-2"></div>
 
             {user ? (
-              <div className="flex items-center gap-3 pl-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-9 h-9 bg-gradient-to-br from-accent-400 to-accent-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg text-sm border-2 border-white/20">
+              <div className="relative pl-2">
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-3 p-1 pr-3 rounded-full hover:bg-white/10 transition-all border border-transparent hover:border-white/20"
+                >
+                  <div className="w-9 h-9 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center font-bold text-white shadow-lg text-sm border-2 border-white/20">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex flex-col">
+                  <div className="hidden md:flex flex-col items-start">
                     <span className="text-sm font-semibold text-white leading-none">
                       {user.name.split(" ")[0]}
                     </span>
@@ -138,14 +136,10 @@ function Navbar({ cartCount }) {
                       {user.role}
                     </span>
                   </div>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 text-white/60 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all"
-                  title="Logout"
-                >
                   <svg
-                    className="w-5 h-5"
+                    className={`w-4 h-4 text-white/70 transition-transform duration-300 ${
+                      userDropdownOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -154,10 +148,46 @@ function Navbar({ cartCount }) {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                      d="M19 9l-7 7-7-7"
                     />
                   </svg>
                 </button>
+
+                {/* Dropdown Menu */}
+                {userDropdownOpen && (
+                  <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden transform origin-top-right animate-fade-in ring-1 ring-black/5">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                      <p className="font-bold text-gray-800 truncate">{user.name}</p>
+                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    </div>
+                    <div className="p-2 space-y-1">
+                      {user.role === "admin" && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
+                        >
+                          <span className="text-lg">⚡</span> Dashboard Admin
+                        </Link>
+                      )}
+                      <Link
+                        to="/orders/history"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-colors"
+                      >
+                         <span className="text-lg">📦</span> Riwayat Pesanan
+                      </Link>
+                    </div>
+                    <div className="p-2 border-t border-gray-100">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                      >
+                        <span className="text-lg">🚪</span> Keluar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <Link

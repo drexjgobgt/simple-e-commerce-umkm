@@ -35,6 +35,17 @@ function Home({ addToCart }) {
     }
   };
 
+  useEffect(() => {
+    if (!loading && window.location.hash === "#products") {
+      setTimeout(() => {
+        const element = document.getElementById("products");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 500); // Delay slightly to ensure render
+    }
+  }, [loading]);
+
   const filteredProducts =
     filter === "all" ? products : products.filter((p) => p.category === filter);
 
@@ -62,7 +73,7 @@ function Home({ addToCart }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden pt-20">
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20">
       {/* Abstract Background Shapes */}
       <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-blue-50 to-white rounded-b-[50px] -z-10"></div>
       <div className="absolute top-0 right-0 w-3/4 h-[600px] bg-gradient-to-bl from-indigo-50/50 to-transparent rounded-bl-full -z-10"></div>
@@ -116,8 +127,8 @@ function Home({ addToCart }) {
         </div>
 
         {/* Categories */}
-        <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide">
-          <div className="flex gap-4 justify-center min-w-max">
+        <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide touch-pan-x">
+          <div className="flex gap-3 px-4 min-w-max md:justify-center">
             {categories.map((cat) => (
               <button
                 key={cat}

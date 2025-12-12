@@ -258,37 +258,52 @@ function Admin() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+    <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pb-12">
+       {/* Background Decoration */}
+       <div className="absolute top-0 right-0 w-1/3 h-64 bg-gradient-to-bl from-blue-100/50 to-transparent -z-10 rounded-bl-full"></div>
+
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+            <div>
+                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+                    Admin Dashboard
+                 </h1>
+                 <p className="text-gray-600 mt-1">
+                    Kelola produk, pesanan, dan pembayaran
+                 </p>
+            </div>
+            
+            {/* Quick Stats or Actions could go here */}
+        </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-8 bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-white/40 w-fit mx-auto md:mx-0 shadow-sm">
         <button
           onClick={() => setActiveTab("products")}
-          className={`px-6 py-2 rounded-lg font-semibold transition ${
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
             activeTab === "products"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? "bg-white text-blue-600 shadow-md transform scale-105"
+              : "text-gray-600 hover:bg-white/50 hover:text-blue-600"
           }`}
         >
-          Produk
+          📦 Produk
         </button>
         <button
           onClick={() => setActiveTab("orders")}
-          className={`px-6 py-2 rounded-lg font-semibold transition ${
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
             activeTab === "orders"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? "bg-white text-blue-600 shadow-md transform scale-105"
+              : "text-gray-600 hover:bg-white/50 hover:text-blue-600"
           }`}
         >
-          Pesanan
+          📄 Pesanan
         </button>
         <button
           onClick={() => setActiveTab("payment")}
-          className={`px-6 py-2 rounded-lg font-semibold transition ${
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
             activeTab === "payment"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              ? "bg-white text-blue-600 shadow-md transform scale-105"
+              : "text-gray-600 hover:bg-white/50 hover:text-blue-600"
           }`}
         >
           💳 Setup Pembayaran
@@ -644,46 +659,56 @@ function Admin() {
             </div>
           )}
 
-          {/* Products Table */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-3 text-left">Produk</th>
-                  <th className="px-4 py-3 text-left">Kategori</th>
-                  <th className="px-4 py-3 text-left">Harga</th>
-                  <th className="px-4 py-3 text-left">Stok</th>
-                  <th className="px-4 py-3 text-left">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product._id} className="border-b">
-                    <td className="px-4 py-3">{product.name}</td>
-                    <td className="px-4 py-3">{product.category}</td>
-                    <td className="px-4 py-3">
-                      Rp {product.price.toLocaleString("id-ID")}
-                    </td>
-                    <td className="px-4 py-3">{product.stock}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="text-blue-600 hover:text-blue-800 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product._id)}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <div key={product._id} className="glass-card rounded-2xl overflow-hidden group hover:shadow-2xl transition-all duration-300 flex flex-col">
+                <div className="relative h-48 overflow-hidden bg-gray-100">
+                    <img 
+                        src={product.image || 'https://via.placeholder.com/300?text=No+Image'} 
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm">
+                        {product.category}
+                    </div>
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center gap-1">
+                        📦 {product.stock}
+                    </div>
+                </div>
+
+                <div className="p-5 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold text-gray-800 mb-1 line-clamp-2 leading-tight">
+                        {product.name}
+                    </h3>
+                    <p className="text-2xl font-bold text-primary-600 mb-4">
+                        Rp {product.price.toLocaleString("id-ID")}
+                    </p>
+                    
+                    <div className="mt-auto flex gap-3 pt-4 border-t border-gray-100">
+                        <button
+                            onClick={() => handleEdit(product)}
+                            className="flex-1 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-semibold transition-colors flex items-center justify-center gap-2"
+                        >
+                            ✏️ Edit
+                        </button>
+                        <button
+                            onClick={() => handleDelete(product._id)}
+                            className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 font-semibold transition-colors flex items-center justify-center gap-2"
+                        >
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                </div>
+              </div>
+            ))}
           </div>
+          {products.length === 0 && (
+             <div className="text-center py-20 text-gray-500">
+                 <div className="text-5xl mb-4">📦</div>
+                 <p>Belum ada produk. Tambahkan sekarang!</p>
+             </div>
+          )}
         </div>
       )}
 
@@ -827,6 +852,7 @@ function Admin() {
 
       {/* Payment Setup Tab */}
       {activeTab === "payment" && <PaymentSetupTab />}
+      </div>
     </div>
   );
 }
