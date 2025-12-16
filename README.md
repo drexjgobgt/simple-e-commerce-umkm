@@ -12,21 +12,27 @@ A comprehensive e-commerce platform for gas cylinder distribution and related pr
 - **Order History**: View complete order history with customer ID tracking
 - **Multiple Payment Methods**: Support for Transfer Bank, COD, and E-Wallet
 - **Guest Checkout**: Optional guest checkout for unregistered users
+- **Live Vendor Info**: See real-time vendor address and contact details on products
+- **Traffic Stats**: View "Sold Count" for popular products
 
 ### 👨‍💼 Vendor/Admin Features
 
 - **Product Management**: Add, edit, and delete products with image upload
 - **Order Management**: View and update order statuses
-- **Payment Configuration**: Individual Midtrans payment setup per vendor
+- **Payment Configuration**: Hybrid setup (Midtrans or Manual QRIS)
 - **Vendor Dashboard**: Separate dashboards for different vendors
 - **Image Upload**: Cloudinary integration for product images
 - **Split Payment System**: Automatic payment distribution to vendors
 
-### 💳 Payment Integration
+### 💳 Payment & Order Integration
 
-- **Midtrans Integration**: Secure payment processing
-- **Per-Vendor Configuration**: Each vendor can set up their own payment keys
-- **Multiple Payment Methods**: Bank transfer, COD, and digital wallets
+- **Hybrid Payment System**:
+    - **Midtrans**: Automated secure payment gateway (optional)
+    - **Manual QRIS**: Direct vendor QRIS upload for fee-free transfers
+- **WhatsApp Integration**:
+    - **Order Confirmation**: Automatic WhatsApp redirection with pre-filled order details
+    - **Proof of Payment**: Customers send transfer proof directly to vendor's WhatsApp
+- **Multiple Payment Methods**: Bank transfer, COD, E-Wallet, and QRIS
 - **Payment Status Tracking**: Real-time payment status updates
 
 ### 🖼️ Media Management
@@ -228,7 +234,8 @@ toko-gas-umkm/
   storeDescription: String,
   // ... other vendor fields
   midtransClientKey: String,
-  midtransServerKey: String
+  midtransServerKey: String,
+  qrisImage: String // URL to uploaded QRIS image
 }
 ```
 
@@ -241,6 +248,7 @@ toko-gas-umkm/
   price: Number,
   category: String,
   stock: Number,
+  soldCount: Number, // Total items sold
   image: String,
   unit: String,
   vendor: ObjectId // Reference to User
@@ -275,10 +283,14 @@ toko-gas-umkm/
 ## 💰 Payment Flow
 
 1. **Order Creation**: Customer places order with selected products
-2. **Payment Token Generation**: Midtrans generates payment token
-3. **Payment Processing**: Customer completes payment via Midtrans
+2. **Payment Selection**:
+    - **Midtrans**: Generates automatic payment token
+    - **QRIS**: Displays vendor's QRIS code for manual scan
+3. **Confirmation**:
+    - **Midtrans**: Auto-verifies payment via webhook
+    - **QRIS**: Redirects to WhatsApp for manual proof submission
 4. **Status Updates**: Real-time payment status tracking
-5. **Vendor Distribution**: Automatic payment split to respective vendors
+5. **Vendor Distribution**: Automatic payment split (for online payments)
 
 ## 📱 Responsive Design
 
