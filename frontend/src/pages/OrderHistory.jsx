@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const STORE_PHONE = import.meta.env.VITE_STORE_PHONE || "6285834255091"; // Default user number or placeholder
 
 function OrderHistory() {
   const navigate = useNavigate();
@@ -119,6 +120,28 @@ function OrderHistory() {
       failed: "bg-red-100 text-red-800",
     };
     return badges[status] || badges.pending;
+  };
+
+  const handleSendToWhatsApp = (order) => {
+    const message = `Halo Toko Gas, saya ingin konfirmasi pesanan saya:
+    
+📄 Order ID: ${order._id}
+📅 Tanggal: ${new Date(order.createdAt).toLocaleDateString("id-ID")}
+👤 Nama: ${order.customerName || "Pelanggan"}
+📦 Status: ${order.orderStatus.toUpperCase()}
+💰 Total: Rp ${order.totalAmount.toLocaleString("id-ID")}
+
+Detail Item:
+${order.items.map(item => `- ${item.name} (${item.quantity}x)`).join("\n")}
+
+Alamat Pengiriman:
+${order.address.street}, ${order.address.city}
+
+Mohon diproses ya, terima kasih! 🙏`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${STORE_PHONE}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   if (loading) {
@@ -281,6 +304,17 @@ function OrderHistory() {
                             Lacak Pengiriman →
                         </button>
                     </div>
+                </div>
+
+                {/* Footer Actions - WhatsApp Button */}
+                <div className="mt-4 pt-3 flex justify-end border-t border-gray-100">
+                    <button 
+                        onClick={() => handleSendToWhatsApp(order)}
+                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-all shadow-md hover:shadow-green-500/20 active:scale-95"
+                    >
+                        <span className="text-lg">📱</span>
+                        Kirim Nota ke WA
+                    </button>
                 </div>
               </div>
             </div>

@@ -85,8 +85,13 @@ function ProductDetail({ addToCart }) {
               {product.name}
             </h1>
 
-            <div className="text-5xl font-bold text-blue-600 mb-6">
-              Rp {product.price.toLocaleString("id-ID")}
+            <div className="flex items-center gap-4 mb-6">
+               <div className="text-5xl font-bold text-blue-600">
+                Rp {product.price.toLocaleString("id-ID")}
+               </div>
+               <div className="text-sm bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-medium">
+                  Terjual: {product.soldCount || 0}
+               </div>
             </div>
 
             <div
@@ -119,35 +124,42 @@ function ProductDetail({ addToCart }) {
             <h3 className="font-bold mb-2">Informasi Penjual</h3>
             <div className="space-y-2 text-sm">
               <p>
-                <strong>Toko:</strong> {product.vendorStoreName}
+                <strong>Toko:</strong> {product.vendor?.storeName || product.vendorStoreName}
               </p>
-              {product.vendorPhone && (
+              {product.vendor?.storePhone && (
                 <p>
-                  <strong>Telepon:</strong> {product.vendorPhone}
+                  <strong>Telepon:</strong> {product.vendor.storePhone}
                 </p>
               )}
               <p className="text-gray-600">
                 {product.vendor?.storeDescription}
               </p>
-              {product.vendorAddress && (
-                <p className="text-gray-700">
-                  <strong>Alamat:</strong> {product.vendorAddress}
-                </p>
+              
+              {/* Prioritaskan Live Address dari Vendor Profile */}
+              {(product.vendor?.storeAddress || product.vendorAddress) && (
+                <div className="mt-2">
+                   <p className="text-gray-700 font-medium">Alamat:</p>
+                   <p className="text-gray-600">
+                      {product.vendor?.storeAddress || product.vendorAddress}
+                   </p>
+                </div>
               )}
-              {product.vendorAddressDetail?.city && (
-                <p className="text-gray-500 text-xs">
-                  {product.vendorAddressDetail.street
-                    ? product.vendorAddressDetail.street + ", "
+
+              {/* Tampilkan detail jika ada di Vendor Profile */}
+              {product.vendor?.storeAddressDetail?.city && (
+                <p className="text-gray-500 text-xs mt-1">
+                  {product.vendor.storeAddressDetail.street
+                    ? product.vendor.storeAddressDetail.street + ", "
                     : ""}
-                  {product.vendorAddressDetail.district
-                    ? product.vendorAddressDetail.district + ", "
+                  {product.vendor.storeAddressDetail.district
+                    ? product.vendor.storeAddressDetail.district + ", "
                     : ""}
-                  {product.vendorAddressDetail.city}
-                  {product.vendorAddressDetail.province
-                    ? `, ${product.vendorAddressDetail.province}`
+                  {product.vendor.storeAddressDetail.city}
+                  {product.vendor.storeAddressDetail.province
+                    ? `, ${product.vendor.storeAddressDetail.province}`
                     : ""}
-                  {product.vendorAddressDetail.postalCode
-                    ? ` ${product.vendorAddressDetail.postalCode}`
+                  {product.vendor.storeAddressDetail.postalCode
+                    ? ` ${product.vendor.storeAddressDetail.postalCode}`
                     : ""}
                 </p>
               )}

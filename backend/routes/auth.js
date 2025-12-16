@@ -184,6 +184,7 @@ router.get("/vendor-profile", async (req, res) => {
 router.put("/vendor-profile", async (req, res) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
+    console.log("Updating vendor profile, body:", req.body); // DEBUG LOG
     if (!token) {
       return res.status(401).json({ message: "Tidak ada token" });
     }
@@ -219,6 +220,11 @@ router.put("/vendor-profile", async (req, res) => {
     if (accountNumber) user.accountNumber = accountNumber;
     if (accountName) user.accountName = accountName;
 
+    // Sanitize location if it has type but no coordinates
+    if (user.location && user.location.type === "Point" && (!user.location.coordinates || user.location.coordinates.length === 0)) {
+        user.location = undefined;
+    }
+
     await user.save();
 
     res.json({
@@ -234,6 +240,7 @@ router.put("/vendor-profile", async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Error updating vendor profile:", error); // DEBUG LOG
     res.status(500).json({ message: error.message });
   }
 });
@@ -253,10 +260,11 @@ router.put("/vendor-profile/payment", async (req, res) => {
       return res.status(403).json({ message: "Akses ditolak" });
     }
 
-    const { midtransClientKey, midtransServerKey } = req.body;
+    const { midtransClientKey, midtransServerKey, qrisImage } = req.body;
 
-    user.midtransClientKey = midtransClientKey;
-    user.midtransServerKey = midtransServerKey;
+    if (midtransClientKey !== undefined) user.midtransClientKey = midtransClientKey;
+    if (midtransServerKey !== undefined) user.midtransServerKey = midtransServerKey;
+    if (qrisImage !== undefined) user.qrisImage = qrisImage;
 
     await user.save();
 
@@ -289,6 +297,25 @@ router.put("/vendor-profile/whatsapp", async (req, res) => {
     await user.save();
 
     res.json({ message: "WhatsApp credentials updated" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Public Shop Info (QRIS, Name, Phone)
+router.get("/public/shop-info", async (req, res) => {
+  try {
+    // Ambil admin pertama (asumsi single vendor utama)
+    // Atau bisa by query param ?vendorId=...
+    const user = await User.findOne({ role: "admin", isActive: true }).select(
+      "storeName storePhone storeAddress qrisImage bankName accountNumber accountName"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Store info not found" });
+    }
+
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

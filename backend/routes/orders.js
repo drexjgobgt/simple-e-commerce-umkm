@@ -28,7 +28,12 @@ const adjustStockForOrder = async (order, direction = "decrease") => {
       // if the product has legacy/invalid location data
       await Product.updateOne(
         { _id: item.product },
-        { $inc: { stock: delta } }
+        { 
+            $inc: { 
+                stock: delta,
+                soldCount: direction === "decrease" ? item.quantity : -item.quantity
+            } 
+        }
       );
       
       updated.push({ product, delta });
@@ -39,7 +44,12 @@ const adjustStockForOrder = async (order, direction = "decrease") => {
       // Revert with updateOne
       await Product.updateOne(
         { _id: change.product._id },
-        { $inc: { stock: -change.delta } }
+        { 
+            $inc: { 
+                stock: -change.delta,
+                soldCount: change.delta 
+            } 
+        }
       );
     }
     throw error;

@@ -257,6 +257,40 @@ function Admin() {
     }
   };
 
+  const handleContactCustomer = (order) => {
+    if (!order.phone) {
+      alert("Nomor telepon pembeli tidak tersedia.");
+      return;
+    }
+
+    // Sanitize phone number: 08xx -> 628xx
+    let phone = order.phone.replace(/\D/g, "");
+    if (phone.startsWith("0")) {
+      phone = "62" + phone.slice(1);
+    }
+
+    const message = `Halo Kak ${order.customerName}, terima kasih sudah memesan di Toko Gas!
+    
+Berikut rincian pesanan Kakak:
+📄 Order ID: ${order._id}
+📅 Tanggal: ${new Date(order.createdAt).toLocaleDateString("id-ID")}
+📦 Status Pesanan: ${order.orderStatus.toUpperCase()}
+💰 Total Tagihan: Rp ${order.totalAmount.toLocaleString("id-ID")}
+💳 Status Pembayaran: ${order.paymentStatus === 'paid' ? 'LUNAS' : 'BELUM LUNAS'}
+
+Item Pesanan:
+${order.items.map(item => `- ${item.name} (${item.quantity}x)`).join("\n")}
+
+Alamat Pengiriman:
+${order.address.street}, ${order.address.city}
+
+Pesanan akan segera kami proses. Mohon ditunggu ya! 🙏`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pb-12">
        {/* Background Decoration */}
@@ -307,6 +341,16 @@ function Admin() {
           }`}
         >
           💳 Setup Pembayaran
+        </button>
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+            activeTab === "profile"
+              ? "bg-white text-blue-600 shadow-md transform scale-105"
+              : "text-gray-600 hover:bg-white/50 hover:text-blue-600"
+          }`}
+        >
+          🏪 Profil Toko
         </button>
       </div>
 
@@ -737,6 +781,12 @@ function Admin() {
                   <div className="text-sm text-gray-500">
                     {new Date(order.createdAt).toLocaleDateString("id-ID")}
                   </div>
+                  <button
+                    onClick={() => handleContactCustomer(order)}
+                    className="mt-2 text-sm bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium hover:bg-green-200 flex items-center gap-1 ml-auto"
+                  >
+                    <span>📱</span> Hubungi Pembeli
+                  </button>
                 </div>
               </div>
 
@@ -852,6 +902,125 @@ function Admin() {
 
       {/* Payment Setup Tab */}
       {activeTab === "payment" && <PaymentSetupTab />}
+
+      {/* Profile Tab */}
+      {activeTab === "profile" && profile && (
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
+            🏪 Edit Profil Toko
+          </h2>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                await axios.put(
+                  `${API_URL}/auth/vendor-profile`,
+                  profile,
+                  getAuthHeader()
+                );
+                alert("✅ Profil berhasil diupdate!");
+                fetchProfile();
+              } catch (error) {
+                alert("❌ Gagal update profil");
+              }
+            }}
+            className="space-y-6"
+          >
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Toko</label>
+                <input
+                  type="text"
+                  value={profile.storeName || ""}
+                  onChange={(e) => setProfile({ ...profile, storeName: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nomor Telepon</label>
+                <input
+                  type="text"
+                  value={profile.storePhone || ""}
+                  onChange={(e) => setProfile({ ...profile, storePhone: e.target.value })}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Singkat</label>
+              <textarea
+                value={profile.storeDescription || ""}
+                onChange={(e) => setProfile({ ...profile, storeDescription: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                rows="3"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Alamat Lengkap</label>
+              <textarea
+                value={profile.storeAddress || ""}
+                onChange={(e) => setProfile({ ...profile, storeAddress: e.target.value })}
+                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all outline-none"
+                rows="2"
+                placeholder="Alamat lengkap untuk ditampilkan di detail produk"
+              />
+            </div>
+
+             <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                <h3 className="font-bold text-blue-800 mb-4 flex items-center gap-2">📍 Detail Lokasi (Untuk Filter Pencarian)</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-blue-700 mb-1">Jalan</label>
+                    <input
+                      type="text"
+                      value={profile.storeAddressDetail?.street || ""}
+                      onChange={(e) => setProfile({ ...profile, storeAddressDetail: { ...profile.storeAddressDetail, street: e.target.value } })}
+                      className="w-full px-3 py-2 rounded border border-blue-200 text-sm focus:ring-2 focus:ring-blue-300 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-blue-700 mb-1">Kecamatan</label>
+                    <input
+                      type="text"
+                      value={profile.storeAddressDetail?.district || ""}
+                      onChange={(e) => setProfile({ ...profile, storeAddressDetail: { ...profile.storeAddressDetail, district: e.target.value } })}
+                      className="w-full px-3 py-2 rounded border border-blue-200 text-sm focus:ring-2 focus:ring-blue-300 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-blue-700 mb-1">Kota</label>
+                    <input
+                      type="text"
+                      value={profile.storeAddressDetail?.city || ""}
+                      onChange={(e) => setProfile({ ...profile, storeAddressDetail: { ...profile.storeAddressDetail, city: e.target.value } })}
+                      className="w-full px-3 py-2 rounded border border-blue-200 text-sm focus:ring-2 focus:ring-blue-300 outline-none"
+                    />
+                  </div>
+                   <div>
+                    <label className="block text-xs font-semibold text-blue-700 mb-1">Provinsi</label>
+                    <input
+                      type="text"
+                      value={profile.storeAddressDetail?.province || ""}
+                      onChange={(e) => setProfile({ ...profile, storeAddressDetail: { ...profile.storeAddressDetail, province: e.target.value } })}
+                      className="w-full px-3 py-2 rounded border border-blue-200 text-sm focus:ring-2 focus:ring-blue-300 outline-none"
+                    />
+                  </div>
+                </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              >
+                💾 Simpan Perubahan
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       </div>
     </div>
   );

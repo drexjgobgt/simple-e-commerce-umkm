@@ -10,6 +10,7 @@ function PaymentSetupTab() {
   const [formData, setFormData] = useState({
     midtransClientKey: "",
     midtransServerKey: "",
+    qrisImage: "",
     waPhoneNumberId: "",
     waApiKey: "",
   });
@@ -33,6 +34,7 @@ function PaymentSetupTab() {
       setFormData({
         midtransClientKey: response.data.midtransClientKey || "",
         midtransServerKey: response.data.midtransServerKey || "",
+        qrisImage: response.data.qrisImage || "",
         waPhoneNumberId: response.data.waPhoneNumberId || "",
         waApiKey: response.data.waApiKey || "",
       });
@@ -61,6 +63,7 @@ function PaymentSetupTab() {
         {
           midtransClientKey: formData.midtransClientKey,
           midtransServerKey: formData.midtransServerKey,
+          qrisImage: formData.qrisImage,
         },
         getAuthHeader()
       );
@@ -176,53 +179,8 @@ function PaymentSetupTab() {
             required
           />
           <p className="text-xs text-gray-500 mt-1">
-            Kunci ini digunakan di frontend untuk inisialisasi pembayaran
+            Kunci ini digunakan di frontend untuk inisialisasi pembayaran (Opsional jika pakai Midtrans)
           </p>
-        </div>
-
-        <div className="border-t pt-4">
-          <h3 className="font-semibold mb-2 text-gray-800">
-            📲 WhatsApp Cloud API (Vendor)
-          </h3>
-          <p className="text-sm text-gray-600 mb-3">
-            Opsional. Jika diisi, struk vendor akan dikirim memakai akun WA
-            bisnis Anda. Jika kosong, akan memakai kredensial global (jika
-            tersedia).
-          </p>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                WA Phone Number ID
-              </label>
-              <input
-                type="text"
-                name="waPhoneNumberId"
-                value={formData.waPhoneNumberId}
-                onChange={handleInputChange}
-                placeholder="misal: 123456789012345"
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Dari WhatsApp Cloud API (Meta). Format numerik ID.
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                WA API Key (Access Token)
-              </label>
-              <input
-                type="password"
-                name="waApiKey"
-                value={formData.waApiKey}
-                onChange={handleInputChange}
-                placeholder="EAAD... (Access Token)"
-                className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Gunakan Permanent Access Token. Jaga kerahasiaannya.
-              </p>
-            </div>
-          </div>
         </div>
 
         <div>
@@ -236,12 +194,69 @@ function PaymentSetupTab() {
             onChange={handleInputChange}
             placeholder="SB-Mid-server-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
             className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            required
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Kunci ini digunakan di backend untuk memproses pembayaran (jaga
-            kerahasiaannya)
+           <p className="text-xs text-gray-500 mt-1">
+            Kunci ini digunakan di backend untuk memproses pembayaran (Opsional)
           </p>
+        </div>
+
+        <div className="border-t pt-4">
+           <h3 className="font-semibold mb-2 text-gray-800">
+            📱 QRIS (Pembayaran Manual)
+          </h3>
+          <p className="text-sm text-gray-600 mb-3">
+             Upload gambar QRIS toko Anda. Pelanggan akan melihat QRIS ini saat checkout dan melakukan transfer manual.
+          </p>
+          
+          <div className="space-y-3">
+              {formData.qrisImage && (
+                  <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <img src={formData.qrisImage} alt="QRIS" className="w-32 h-32 object-contain bg-white rounded-md border" />
+                      <div>
+                          <p className="font-medium text-green-600 mb-1">✅ QRIS Tersimpan</p>
+                          <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, qrisImage: "" }))}
+                              className="text-sm text-red-500 hover:underline"
+                          >
+                              Hapus QRIS
+                          </button>
+                      </div>
+                  </div>
+              )}
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const formDataUpload = new FormData();
+                    formDataUpload.append("image", file);
+                    
+                    try {
+                         const response = await axios.post(
+                            `${API_URL}/upload/image`,
+                            formDataUpload,
+                            {
+                            headers: {
+                                "Content-Type": "multipart/form-data",
+                                Authorization: `Bearer ${localStorage.getItem("token")}`,
+                            },
+                            }
+                        );
+                        setFormData(prev => ({ ...prev, qrisImage: response.data.url }));
+                    } catch (error) {
+                        alert("Gagal upload QRIS");
+                    }
+                }}
+                className="w-full border rounded px-3 py-2"
+              />
+               <p className="text-xs text-gray-500">
+                Format: JPG, PNG. Maksimal 5MB.
+              </p>
+          </div>
         </div>
 
         <div className="flex gap-4">

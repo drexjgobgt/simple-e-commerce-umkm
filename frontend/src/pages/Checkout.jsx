@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -18,12 +18,25 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
     paymentMethod: "Transfer Bank",
     notes: "",
   });
+  const [shopInfo, setShopInfo] = useState(null);
 
   const totalAmount = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
+  useEffect(() => {
+    fetchShopInfo();
+  }, []);
+
+  const fetchShopInfo = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/auth/public/shop-info`);
+      setShopInfo(res.data);
+    } catch (error) {
+      console.error("Failed to fetch shop info");
+    }
+  };
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -35,12 +48,34 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
     e.preventDefault();
     setLoading(true);
 
+    // Validasi No. Telepon
+    let phoneClean = formData.phone.replace(/\D/g, ""); // Hapus non-digit
+
+    // Convert 08 -> 628
+    if (phoneClean.startsWith("0")) {
+      phoneClean = "62" + phoneClean.slice(1);
+    }
+    
+    // Convert 62 -> 62 (ensure it starts with 62)
+    if (!phoneClean.startsWith("62")) {
+       alert("Nomor telepon tidak valid. Gunakan format 08xx atau 628xx.");
+       setLoading(false);
+       return;
+    }
+
+    // Min length check (Indonesia numbers usually 10-13 digits, allowing tolerance)
+    if (phoneClean.length < 10) {
+        alert("Nomor telepon terlalu pendek. Mohon masukkan nomor WA yang valid.");
+        setLoading(false);
+        return;
+    }
+
     try {
       // 1. Create order terlebih dahulu
       const orderData = {
         customerName: formData.customerName,
         email: formData.email,
-        phone: formData.phone,
+        phone: phoneClean, // Use sanitized phone
         address: {
           street: formData.street,
           city: formData.city,
@@ -66,58 +101,74 @@ function Checkout({ cart, updateQuantity, removeFromCart, clearCart }) {
       const order = orderResponse.data;
 
       // 2. Jika metode pembayaran online, proses dengan Midtrans
+      // 2. Logic Pembayaran
       if (
         formData.paymentMethod === "Transfer Bank" ||
         formData.paymentMethod === "E-Wallet"
       ) {
-        const paymentData = {
-          orderId: order._id,
-          amount: totalAmount,
-          customerDetails: {
-            first_name: formData.customerName,
-            email: formData.email,
-            phone: formData.phone,
-          },
-          items: cart.map((item) => ({
-            id: item._id,
-            price: item.price,
-            quantity: item.quantity,
-            name: item.name,
-          })),
-        };
+          // Jika ada QRIS, arahkan ke WhatsApp untuk konfirmasi manual
+          if (shopInfo?.qrisImage) {
+              const message = `Halo Admin, saya sudah melakukan pembayaran via QRIS.
+              
+Order ID: ${order._id}
+Total: Rp ${totalAmount.toLocaleString("id-ID")}
+Nama: ${formData.customerName}
 
-        const paymentResponse = await axios.post(
-          `${API_URL}/payment/create-token`,
-          paymentData
-        );
+Mohon diproses. Berikut bukti transfer saya (lampirkan gambar):`;
+              
+              const whatsappUrl = `https://wa.me/${shopInfo.storePhone.replace(/^0/, "62")}?text=${encodeURIComponent(message)}`;
+              
+              alert("✅ Pesanan dibuat! Silakan kirim bukti pembayaran via WhatsApp.");
+              window.open(whatsappUrl, "_blank");
+              clearCart();
+              navigate("/");
+          } else {
+             // Fallback ke Midtrans jika TIDAK ada QRIS (Legacy)
+             // Atau bisa juga tetap pakai Midtrans kalau user mau
+             // Tapi user request "tidak usah pakai midtrans"
+             // Jadi kita prioritaskan QRIS jika ada.
+             
+             // ... Code Midtrans lama ...
+             const paymentData = {
+                orderId: order._id,
+                amount: totalAmount,
+                customerDetails: {
+                    first_name: formData.customerName,
+                    email: formData.email,
+                    phone: phoneClean,
+                },
+                items: cart.map((item) => ({
+                    id: item._id,
+                    price: item.price,
+                    quantity: item.quantity,
+                    name: item.name,
+                })),
+            };
 
-        // 3. Tampilkan Midtrans Snap popup
-        window.snap.pay(paymentResponse.data.token, {
-          onSuccess: function (result) {
-            console.log("Payment succeeded - Order ID:", order._id);
-            alert("✅ Pembayaran berhasil! Terima kasih.");
-            clearCart();
-            navigate("/");
-          },
-          onPending: function (result) {
-            console.log("Payment pending - Order ID:", order._id);
-            alert("⏳ Menunggu pembayaran. Order ID: " + order._id);
-            clearCart();
-            navigate("/");
-          },
-          onError: function (result) {
-            console.log("Payment error - Order ID:", order._id);
-            alert("❌ Pembayaran gagal. Silakan coba lagi.");
-          },
-          onClose: function () {
-            console.log("Customer closed the popup without finishing payment");
-            alert(
-              "Pembayaran dibatalkan. Order ID: " +
-                order._id +
-                " masih tersimpan."
+            const paymentResponse = await axios.post(
+                `${API_URL}/payment/create-token`,
+                paymentData
             );
-          },
-        });
+
+            window.snap.pay(paymentResponse.data.token, {
+                onSuccess: function (result) {
+                    alert("✅ Pembayaran berhasil!");
+                    clearCart();
+                    navigate("/");
+                },
+                onPending: function (result) {
+                    alert("⏳ Menunggu pembayaran.");
+                    clearCart();
+                    navigate("/");
+                },
+                onError: function (result) {
+                    alert("❌ Pembayaran gagal.");
+                },
+                onClose: function () {
+                    alert("Pembayaran belum selesai.");
+                },
+            });
+          }
       } else {
         // COD - langsung sukses
         alert(`✅ Pesanan berhasil dibuat! 
@@ -345,6 +396,31 @@ Silakan siapkan uang tunai saat barang tiba.`);
                   <option value="E-Wallet">E-Wallet</option>
                 </select>
               </div>
+
+              {/* Tampilkan QRIS jika metode transfer & ada gambar */}
+              {(formData.paymentMethod === "Transfer Bank" || formData.paymentMethod === "E-Wallet") && shopInfo?.qrisImage && (
+                  <div className="bg-white border-2 border-blue-100 rounded-xl p-4 flex flex-col items-center text-center animate-fade-in">
+                      <p className="font-bold text-gray-800 mb-2">Scan QRIS untuk Bayar</p>
+                      <div className="bg-white p-2 rounded-lg shadow-sm border mb-2">
+                         <img src={shopInfo.qrisImage} alt="QRIS Toko" className="w-48 h-48 object-contain" />
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">
+                          {shopInfo.storeName}
+                      </p>
+                      <div className="text-xs bg-yellow-50 text-yellow-800 px-3 py-1 rounded-full">
+                          Upload bukti transfer via WA setelah order
+                      </div>
+                  </div>
+              )}
+              
+              {/* Fallback info bank jika tidak ada QRIS tapi ada info bank */}
+              {(formData.paymentMethod === "Transfer Bank") && !shopInfo?.qrisImage && shopInfo?.bankName && (
+                   <div className="bg-gray-50 p-4 rounded-lg border">
+                       <p className="font-semibold text-sm">Transfer Manual:</p>
+                       <p className="text-sm">{shopInfo.bankName}: {shopInfo.accountNumber}</p>
+                       <p className="text-sm text-gray-500">a.n {shopInfo.accountName}</p>
+                   </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-1">

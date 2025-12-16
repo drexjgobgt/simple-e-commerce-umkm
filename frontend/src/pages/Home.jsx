@@ -7,10 +7,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 function Home({ addToCart }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
-  const [city, setCity] = useState("");
-  const [radiusKm, setRadiusKm] = useState("");
-  const [coords, setCoords] = useState({ lat: "", lng: "" });
 
   useEffect(() => {
     fetchProducts();
@@ -18,15 +14,8 @@ function Home({ addToCart }) {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`, {
-        params: {
-          category: filter !== "all" ? filter : undefined,
-          city: city || undefined,
-          lat: coords.lat || undefined,
-          lng: coords.lng || undefined,
-          radiusKm: radiusKm || undefined,
-        },
-      });
+      // Just fetch all products, we will slice them for display
+      const response = await axios.get(`${API_URL}/products`);
       setProducts(response.data);
       setLoading(false);
     } catch (error) {
@@ -35,42 +24,21 @@ function Home({ addToCart }) {
     }
   };
 
-  useEffect(() => {
-    if (!loading && window.location.hash === "#products") {
-      setTimeout(() => {
-        const element = document.getElementById("products");
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }, 500); // Delay slightly to ensure render
-    }
-  }, [loading]);
-
-  const filteredProducts =
-    filter === "all" ? products : products.filter((p) => p.category === filter);
-
-  const categories = [
-    "all",
-    "Gas 3kg",
-    "Gas 5kg",
-    "Gas 12kg",
-    "Kompor",
-    "Selang",
-    "Regulator",
-  ];
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-primary-50">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-primary-600 text-lg font-medium animate-pulse">
-            Memuat produk...
+            Memuat...
           </p>
         </div>
       </div>
     );
   }
+
+  // Take only first 4-8 products for "Featured" section
+  const featuredProducts = products.slice(0, 8);
 
   return (
     <div className="min-h-screen bg-slate-50 relative overflow-x-hidden pt-20">
@@ -80,7 +48,7 @@ function Home({ addToCart }) {
       
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-16 animate-slide-up pt-12">
+        <div className="text-center mb-20 animate-slide-up pt-12">
           <div className="inline-flex items-center gap-2 bg-white border border-blue-100 px-4 py-1.5 rounded-full text-blue-800 text-sm font-bold mb-6 shadow-sm">
             <span className="text-yellow-500 text-lg">🔥</span>
             <span>Solusi Gas & Dapur UMKM No.1</span>
@@ -94,144 +62,148 @@ function Home({ addToCart }) {
             Aman, cepat, dan transparan.
           </p>
           
-          <div className="glass p-4 rounded-2xl max-w-4xl mx-auto shadow-2xl">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="bg-white rounded-xl p-3 flex items-center gap-3">
-                 <div className="bg-primary-50 p-2 rounded-lg text-2xl">🏙️</div>
-                 <input
-                    type="text"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    className="w-full bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                    placeholder="Cari kota..."
-                 />
-              </div>
-              <div className="bg-white rounded-xl p-3 flex items-center gap-3">
-                 <div className="bg-primary-50 p-2 rounded-lg text-2xl">🎯</div>
-                 <input
-                    type="number"
-                    value={radiusKm}
-                    onChange={(e) => setRadiusKm(e.target.value)}
-                    className="w-full bg-transparent outline-none text-gray-700 placeholder-gray-400"
-                    placeholder="Radius (km)"
-                 />
-              </div>
-              <button 
-                onClick={fetchProducts}
-                className="bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl py-3 transition-all hover:transform hover:scale-[1.02] shadow-lg shadow-accent-500/30"
-              >
-                Cari Agen Terdekat
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="mb-12 overflow-x-auto pb-4 scrollbar-hide touch-pan-x">
-          <div className="flex gap-3 px-4 min-w-max md:justify-center">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-6 py-2.5 rounded-full font-medium transition-all duration-300 whitespace-nowrap border ${
-                  filter === cat
-                    ? "bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-600/30 transform scale-105"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-primary-300 hover:text-primary-600"
-                }`}
-              >
-                {cat === "all" ? "Semua Produk" : cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8" id="products">
-          {filteredProducts.map((product) => (
-            <div
-              key={product._id}
-              className="group bg-white rounded-2xl overflow-hidden hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+          <div className="flex justify-center gap-4">
+            <Link 
+              to="/products"
+              className="bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl px-8 py-4 text-lg transition-all hover:transform hover:scale-105 shadow-lg shadow-accent-500/30"
             >
-              <div className="relative aspect-square overflow-hidden bg-gray-100">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                
-                <div className="absolute bottom-4 left-4 right-4 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                   <button
-                    onClick={() => addToCart(product)}
-                    disabled={product.stock === 0}
-                    className="w-full bg-white text-primary-700 py-2.5 rounded-xl font-bold shadow-lg hover:bg-primary-50 transition-colors disabled:opacity-75 disabled:cursor-not-allowed"
-                   >
-                     {product.stock > 0 ? "Tambah ke Keranjang" : "Stok Habis"}
-                   </button>
-                </div>
+              Belanja Sekarang
+            </Link>
+             <Link 
+              to="/products"
+              className="bg-white hover:bg-gray-50 text-gray-700 font-bold rounded-xl px-8 py-4 text-lg transition-all border border-gray-200 shadow-sm"
+            >
+              Cari Agen
+            </Link>
+          </div>
+        </div>
 
-                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-primary-700 shadow-sm">
-                  {product.category}
+        {/* Key Features Section */}
+        <div className="mb-24">
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+                <div className="p-8 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        🛡️
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Agen Terverifikasi</h3>
+                    <p className="text-gray-500 leading-relaxed">
+                        Kami hanya bekerja sama dengan agen gas resmi dan terpercaya untuk menjamin kualitas dan keamanan produk.
+                    </p>
                 </div>
-
-                {product.stock < 10 && product.stock > 0 && (
-                   <div className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm animate-pulse">
-                     Sisa {product.stock}
-                   </div>
-                )}
-              </div>
-
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-2">
-                   <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px]">🏪</div>
-                   <span className="text-xs text-gray-500 font-medium truncate">
-                     {product.vendorStoreName || "Official Store"}
-                   </span>
+                <div className="p-8 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
+                     <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        ⚡
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Pengiriman Cepat</h3>
+                    <p className="text-gray-500 leading-relaxed">
+                        Pesan gas sekarang, langsung diantar ke lokasi Anda. Temukan agen terdekat untuk layanan kilat.
+                    </p>
                 </div>
-                
-                <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-1 group-hover:text-primary-600 transition-colors">
-                  {product.name}
-                </h3>
-                
-                <div className="flex items-end justify-between mt-4">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Harga per unit</p>
-                    <div className="text-2xl font-bold text-primary-600 font-display">
+                <div className="p-8 bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all hover:-translate-y-1">
+                     <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        💯
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">Harga Transparan</h3>
+                    <p className="text-gray-500 leading-relaxed">
+                        Harga sesuai HET (Harga Eceran Tertinggi) resmi. Tidak ada biaya tersembunyi.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {/* How It Works Section */}
+        <div className="mb-24">
+            <div className="text-center mb-12">
+                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 font-display">Cara Pesan di GasKu</h2>
+                 <p className="text-gray-500">Mudah dan cepat, hanya dalam 3 langkah sederhana</p>
+            </div>
+           
+            <div className="flex flex-col md:flex-row justify-center items-center gap-8 relative max-w-5xl mx-auto">
+                 {/* Connection Line (Desktop) */}
+                <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gray-100 -z-10 -translate-y-1/2"></div>
+                {/* Steps */}
+                {[
+                  { num: 1, title: "Cari Lokasi", desc: "Temukan agen terdekat di sekitar Anda." },
+                  { num: 2, title: "Pilih Produk", desc: "Pilih gas sesuai kebutuhan Anda." },
+                  { num: 3, title: "Terima Pesanan", desc: "Kurir mengantar langsung ke dapur Anda." }
+                ].map((step) => (
+                    <div key={step.num} className="bg-white p-6 rounded-2xl shadow-sm relative w-full md:w-1/3 text-center border border-gray-100 hover:border-primary-100 transition-colors">
+                        <div className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4 ring-4 ring-primary-50">
+                            {step.num}
+                        </div>
+                        <h4 className="text-lg font-bold mb-2">{step.title}</h4>
+                        <p className="text-sm text-gray-500">{step.desc}</p>
+                    </div>
+                ))}
+            </div>
+        </div>
+
+        {/* Featured Products */}
+        <div className="mb-12">
+          <div className="flex justify-between items-end mb-8">
+            <div>
+               <h2 className="text-3xl font-bold text-gray-900 mb-2 font-display">Produk Pilihan</h2>
+               <p className="text-gray-500">Stok sedia untuk kebutuhan Anda</p>
+            </div>
+            <Link to="/products" className="text-primary-600 font-bold hover:text-primary-700 hover:underline">
+               Lihat Semua &rarr;
+            </Link>
+          </div>
+
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <div
+                  key={product._id}
+                  className="group bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
+                >
+                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                     {/* Badge Stok Habis */}
+                     {product.stock === 0 && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold">Stok Habis</span>
+                        </div>
+                     )}
+                  </div>
+                  <div className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                        <div className="text-xs text-gray-500 font-medium flex items-center gap-1">
+                             <span>🏪</span> {product.vendor?.storeName || product.vendorStoreName || "Official Store"}
+                        </div>
+                        <div className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
+                            Terjual {product.soldCount || 0}
+                        </div>
+                    </div>
+                    
+                    <h3 className="font-bold text-gray-800 mb-1 truncate">{product.name}</h3>
+                     <div className="text-lg font-bold text-primary-600 font-display mb-3">
                       Rp {product.price.toLocaleString("id-ID")}
                     </div>
-                  </div>
-                  <Link 
-                    to={`/product/${product._id}`}
-                    className="w-10 h-10 rounded-full bg-gray-50 hover:bg-accent-50 flex items-center justify-center text-gray-400 hover:text-accent-600 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-lg">
-            <div className="text-6xl mb-4 grayscale opacity-50">📦</div>
-            <h3 className="text-2xl font-bold text-gray-800 mb-2 font-display">
-              Produk Tidak Ditemukan
-            </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Maaf, kami tidak dapat menemukan produk yang sesuai dengan kriteria pencarian Anda.
-            </p>
-            <button 
-               onClick={() => {setFilter("all"); setCity(""); setRadiusKm("");}}
-               className="mt-6 text-primary-600 font-medium hover:underline"
-            >
-              Reset Filter
-            </button>
-          </div>
-        )}
+                    <div className="flex gap-2">
+                         <Link
+                            to={`/product/${product._id}`}
+                            className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-lg font-bold text-xs hover:bg-blue-100 transition-colors text-center"
+                        >
+                            Detail
+                        </Link>
+                        <button
+                            onClick={() => addToCart(product)}
+                            disabled={product.stock === 0}
+                            className="flex-[2] bg-primary-600 text-white py-2 rounded-lg font-bold shadow-md hover:bg-primary-700 transition-colors text-xs disabled:opacity-75 disabled:cursor-not-allowed"
+                        >
+                            {product.stock > 0 ? "Beli" : "Habis"}
+                        </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
       </div>
     </div>
   );

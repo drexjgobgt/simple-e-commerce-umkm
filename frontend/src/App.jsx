@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useState, Suspense, lazy } from "react";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 // Lazy Load Pages
 const Home = lazy(() => import("./pages/Home"));
+const Products = lazy(() => import("./pages/Products"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Admin = lazy(() => import("./pages/Admin"));
@@ -59,35 +61,39 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-slate-50 flex flex-col">
         <Navbar
           cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Home addToCart={addToCart} />} />
-            <Route
-              path="/product/:id"
-              element={<ProductDetail addToCart={addToCart} />}
-            />
-            <Route
-              path="/checkout"
-              element={
-                <Checkout
-                  cart={cart}
-                  updateQuantity={updateQuantity}
-                  removeFromCart={removeFromCart}
-                  clearCart={clearCart}
-                />
-              }
-            />
-            <Route path="/orders/history" element={<OrderHistory />} />
-            <Route path="/register-vendor" element={<RegisterVendor />} />
-            <Route path="/vendor-profile" element={<VendorProfile />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
-        </Suspense>
+        <div className="flex-grow">
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Home addToCart={addToCart} />} />
+              <Route path="/products" element={<Products addToCart={addToCart} />} />
+              <Route
+                path="/product/:id"
+                element={<ProductDetail addToCart={addToCart} />}
+              />
+              <Route
+                path="/checkout"
+                element={
+                  <Checkout
+                    cart={cart}
+                    updateQuantity={updateQuantity}
+                    removeFromCart={removeFromCart}
+                    clearCart={clearCart}
+                  />
+                }
+              />
+              <Route path="/orders/history" element={<OrderHistory />} />
+              <Route path="/register-vendor" element={<RegisterVendor />} />
+              <Route path="/vendor-profile" element={<VendorProfile />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={<Admin />} />
+            </Routes>
+          </Suspense>
+        </div>
+        <Footer />
       </div>
     </Router>
   );

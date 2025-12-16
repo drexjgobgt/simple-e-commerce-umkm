@@ -62,7 +62,7 @@ router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).populate(
       "vendor",
-      "storeName storeDescription storePhone storeAddress"
+      "storeName storeDescription storePhone storeAddress storeAddressDetail"
     );
 
     if (!product) {

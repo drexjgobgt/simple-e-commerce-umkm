@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       default: "unit",
     },
+    soldCount: {
+      type: Number,
+      default: 0,
+    },
     // VENDOR INFORMATION
     vendor: {
       type: mongoose.Schema.Types.ObjectId,

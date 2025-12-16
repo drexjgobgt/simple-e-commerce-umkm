@@ -48,7 +48,6 @@ const userSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ["Point"],
-        default: "Point",
       },
       coordinates: {
         type: [Number], // [lng, lat]
@@ -78,6 +77,10 @@ const userSchema = new mongoose.Schema(
     },
     midtransServerKey: {
       type: String,
+    },
+    // QRIS Manual Payment
+    qrisImage: {
+      type: String, // URL to uploaded image
     },
     // Status
     isVerified: {

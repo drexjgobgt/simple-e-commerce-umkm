@@ -24,7 +24,7 @@ function Navbar({ cartCount }) {
 
   const navLinks = [
     { name: "Beranda", path: "/", icon: "🏠" },
-    { name: "Produk", path: "/#products", icon: "🛍️" },
+    { name: "Produk", path: "/products", icon: "🛍️" },
   ];
 
   return (
@@ -73,34 +73,13 @@ function Navbar({ cartCount }) {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-2">
             {navLinks.map((link) => (
-              <a
+              <Link
                 key={link.name}
-                href={link.path}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (link.name === "Produk") {
-                    if (location.pathname === "/") {
-                      const element = document.getElementById("products");
-                      if (element) {
-                        element.scrollIntoView({ behavior: "smooth" });
-                      }
-                    } else {
-                      window.location.href = "/#products";
-                    }
-                  } else {
-                     if (link.path === "/") {
-                        if (location.pathname === "/") {
-                            window.scrollTo({ top: 0, behavior: "smooth" });
-                        } else {
-                            window.location.href = "/";
-                        }
-                     }
-                  }
-                }}
+                to={link.path}
                 className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 font-medium text-sm cursor-pointer"
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
 
             <Link
