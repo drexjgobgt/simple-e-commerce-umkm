@@ -55,17 +55,17 @@ function ProductDetail({ addToCart }) {
     <div className="container mx-auto px-4 py-8">
       <button
         onClick={() => navigate("/")}
-        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 mb-6 hover:bg-blue-50 px-4 py-2 rounded-lg"
+        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200 mb-6 hover:bg-blue-50 px-4 py-2 rounded-lg text-sm md:text-base"
       >
         ← Kembali ke Beranda
       </button>
 
-      <div className="grid md:grid-cols-2 gap-10 bg-white rounded-2xl shadow-2xl p-10 border border-gray-100">
+      <div className="grid md:grid-cols-2 gap-6 md:gap-10 bg-white rounded-2xl shadow-2xl p-4 md:p-10 border border-gray-100">
         <div className="relative">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-96 object-cover rounded-xl shadow-lg"
+            className="w-full h-64 md:h-96 object-cover rounded-xl shadow-lg"
           />
           <div className="absolute top-4 left-4 bg-white bg-opacity-90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-bold text-gray-700 shadow-md">
             {product.category}
@@ -81,12 +81,12 @@ function ProductDetail({ addToCart }) {
 
         <div className="space-y-6">
           <div>
-            <h1 className="text-4xl font-bold mb-4 text-gray-900 leading-tight">
+            <h1 className="text-2xl md:text-4xl font-bold mb-4 text-gray-900 leading-tight">
               {product.name}
             </h1>
 
-            <div className="flex items-center gap-4 mb-6">
-               <div className="text-5xl font-bold text-blue-600">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+               <div className="text-3xl md:text-5xl font-bold text-blue-600">
                 Rp {product.price.toLocaleString("id-ID")}
                </div>
                <div className="text-sm bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-medium">
@@ -193,10 +193,10 @@ function ProductDetail({ addToCart }) {
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
                 >
                   🛒 Tambah ke Keranjang
                 </button>
@@ -205,7 +205,7 @@ function ProductDetail({ addToCart }) {
                     handleAddToCart();
                     navigate("/checkout");
                   }}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-4 rounded-xl font-bold text-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
+                  className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
                 >
                   ⚡ Beli Sekarang
                 </button>
